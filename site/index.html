@@ -11,10 +11,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  --bg:#F6F8F3; --surface:#FFFFFF; --ink:#16241D; --muted:#56675E; --line:#D9E2DA;
-  --leaf:#2D6A4B; --leaf-soft:#E2EEE6; --leaf-ink:#FFFFFF;
-  --sun:#F4B52C; --sun-deep:#C98A0B; --sun-soft:#FDF1D4;
-  --deep:#15352A; --deep-ink:#EAF3EE; --deep-muted:#A9C4B6;
+  --bg:#FAF8F5; --surface:#FFFFFF; --ink:#1A1810; --muted:#635C4E; --line:#EBE5D8;
+  --leaf:#FAB814; --leaf-soft:#FFF6DC; --leaf-ink:#1A1810;
+  --sun:#FAB814; --sun-deep:#C98A0B; --sun-soft:#FFF5DB;
+  --deep:#1A1810; --deep-ink:#FFF8EB; --deep-muted:#C5B99F;
   --danger:#A63D2F;
   --radius-l:22px; --radius-m:14px; --radius-s:9px;
   --font:"Host Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -24,18 +24,18 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#101915; --surface:#17231D; --ink:#E6EFE9; --muted:#9BB0A4; --line:#26362D;
-    --leaf:#7CC49C; --leaf-soft:#1D3328; --leaf-ink:#0E1A14;
-    --sun:#F4BE45; --sun-deep:#D89A1C; --sun-soft:#33291166;
-    --deep:#0B2219; --deep-ink:#E6F1EB; --deep-muted:#96B5A5;
+    --bg:#14120C; --surface:#1E1C15; --ink:#F7F4EB; --muted:#A8A090; --line:#2C281F;
+    --leaf:#FAB814; --leaf-soft:#2C250B; --leaf-ink:#14120C;
+    --sun:#FAB814; --sun-deep:#FFC83B; --sun-soft:#33291166;
+    --deep:#0D0C08; --deep-ink:#F7F4EB; --deep-muted:#A8A090;
     --danger:#E58B7C;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#101915; --surface:#17231D; --ink:#E6EFE9; --muted:#9BB0A4; --line:#26362D;
-  --leaf:#7CC49C; --leaf-soft:#1D3328; --leaf-ink:#0E1A14;
-  --sun:#F4BE45; --sun-deep:#D89A1C; --sun-soft:#33291166;
-  --deep:#0B2219; --deep-ink:#E6F1EB; --deep-muted:#96B5A5;
+  --bg:#14120C; --surface:#1E1C15; --ink:#F7F4EB; --muted:#A8A090; --line:#2C281F;
+  --leaf:#FAB814; --leaf-soft:#2C250B; --leaf-ink:#14120C;
+  --sun:#FAB814; --sun-deep:#FFC83B; --sun-soft:#33291166;
+  --deep:#0D0C08; --deep-ink:#F7F4EB; --deep-muted:#A8A090;
   --danger:#E58B7C;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -283,16 +283,12 @@ footer .wordmark{color:var(--ink)}
       <p class="prize-range">₹10–₹5,000</p>
       <p>Complete all seven challenges for 70 points to unlock one scratch card.</p>
       <div class="reward-slot" id="rewardSlot"><div class="locked">70 more points to unlock</div></div>
-      <p class="fine">One card per employee, awarded once. A fixed pool of 200 prizes totals ₹25,000. Cards keep the same prize when reopened. Redemption is verified against your claim code.</p>
-      <details>
-        <summary>Prize amounts and availability</summary>
-        <p>1 × ₹5,000, 2 × ₹2,000, 5 × ₹1,000, 10 × ₹500, 2 × ₹100, 100 × ₹50 and 80 × ₹10. Prizes are randomly assigned without replacement, so chances change as cards are claimed. No purchase required.</p>
-      </details>
+      <p class="fine">One card per employee, awarded once.</p>
     </div>
     <div id="leaderboard">
       <p class="kicker">A little friendly encouragement</p>
       <h2>Every small win counts.</h2>
-      <p style="margin-top:14px">Employee names and points, updated every 30 seconds.</p>
+      <p style="margin-top:14px">Your colleagues names and points, updated every 30 seconds.</p>
       <div id="boardSlot"><p class="empty">The starting line is open. Complete a challenge to be first on the board.</p></div>
       <p class="fine">Points celebrate participation, not mental health or wellbeing. Uploaded files stay private to organisers.</p>
     </div>
@@ -379,7 +375,7 @@ footer .wordmark{color:var(--ink)}
 
 <footer class="wrap">
   <a class="wordmark" href="#main">oppam.me</a>
-  <p>For every person. In every team. On every shift.</p>
+  <p>This World Mental Health Day, take one little step back towards yourself.</p>
 </footer>
 
 <dialog id="dlg" aria-labelledby="dlgTitle">

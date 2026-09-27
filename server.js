@@ -91,13 +91,20 @@ function getRandomPrize() {
 
 // API Routes
 
-const ADMIN_EMAILS = ["midhu@gmail.com", "midhilage@gmail.com", "midhu@oppam.me", "midhilage@oppam.me"];
+const ADMIN_EMAILS = [
+  "midhu@gmail.com",
+  "midhilage@gmail.com",
+  "midhu@oppam.me",
+  "midhilage@oppam.me",
+  "hr@oppam.me",
+  "mubashira@oppam.me"
+];
 function isAdminEmail(email) {
   if (!email) return false;
   const e = email.toString().trim().toLowerCase();
   if (ADMIN_EMAILS.includes(e)) return true;
   const username = e.split("@")[0];
-  return username === "midhu" || username === "midhilage";
+  return username === "midhu" || username === "midhilage" || username === "hr" || username === "mubashira";
 }
 
 // 1. Auth Login / Register

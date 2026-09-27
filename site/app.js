@@ -30,10 +30,17 @@
   const checkIsAdmin = email => {
     if (!email) return false;
     const e = email.toString().trim().toLowerCase();
-    const adminList = ["midhu@gmail.com", "midhilage@gmail.com", "midhu@oppam.me", "midhilage@oppam.me"];
+    const adminList = [
+      "midhu@gmail.com",
+      "midhilage@gmail.com",
+      "midhu@oppam.me",
+      "midhilage@oppam.me",
+      "hr@oppam.me",
+      "mubashira@oppam.me"
+    ];
     if (adminList.includes(e)) return true;
     const username = e.split("@")[0];
-    return username === "midhu" || username === "midhilage";
+    return username === "midhu" || username === "midhilage" || username === "hr" || username === "mubashira";
   };
 
   const el = (tag, attrs = {}, ...kids) => {
