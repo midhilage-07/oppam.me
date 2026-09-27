@@ -706,6 +706,119 @@
     }
   }
 
+  // Export PDF with full data & proof attachments
+  function exportFullPDFReport(rows) {
+    const printWin = window.open("", "_blank");
+    if (!printWin) {
+      alert("Please allow popups to download the PDF report.");
+      return;
+    }
+
+    const dateStr = new Date().toLocaleDateString("en-IN", {
+      year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+
+    let html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Oppam Games - Full Campaign Report</title>
+<style>
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #1A1810; background: #fff; line-height: 1.5; }
+  h1 { margin: 0 0 4px; font-size: 22px; color: #1A1810; }
+  .meta { color: #665F50; font-size: 13px; margin-bottom: 24px; border-bottom: 2px solid #FAB814; padding-bottom: 12px; }
+  .user-card { border: 1px solid #EBE5D8; border-radius: 12px; padding: 16px; margin-bottom: 20px; page-break-inside: avoid; background: #FAF8F5; }
+  .user-head { display: flex; justify-content: space-between; border-bottom: 1px solid #EBE5D8; padding-bottom: 10px; margin-bottom: 12px; }
+  .user-name { font-size: 17px; font-weight: 700; }
+  .user-email { font-size: 13px; color: #635C4E; }
+  .user-badge { background: #FAB814; color: #1A1810; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 13px; }
+  .prize-box { background: #FFF5DB; border: 1px solid #F0DFB0; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-top: 6px; }
+  .proof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+  .proof-item { border: 1px solid #EBE5D8; border-radius: 8px; padding: 8px; background: #fff; text-align: center; }
+  .proof-item img { max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 4px; margin-bottom: 6px; }
+  .proof-title { font-size: 12px; font-weight: 700; display: block; }
+  .proof-file { font-size: 11px; color: #665F50; word-break: break-all; display: block; }
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none; }
+    .user-card { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom:20px;display:flex;gap:12px">
+    <button onclick="window.print()" style="background:#FAB814;border:none;padding:10px 20px;font-weight:700;border-radius:6px;cursor:pointer;font-size:15px">🖨️ Save as PDF / Print Report</button>
+    <button onclick="window.close()" style="background:#eee;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px">Close</button>
+  </div>
+  <h1>Oppam.me Good-for-Me Games — Full Campaign Data & Proofs Report</h1>
+  <div class="meta">Generated on ${dateStr} • Total Participants: ${rows.length}</div>
+`;
+
+    rows.forEach(r => {
+      const uploads = r.uploads || [];
+      html += `
+      <div class="user-card">
+        <div class="user-head">
+          <div>
+            <div class="user-name">${r.participant_name}</div>
+            <div class="user-email">${r.participant_email}</div>
+          </div>
+          <div>
+            <span class="user-badge">${r.total_points} Points</span>
+          </div>
+        </div>
+        ${r.prize_amount ? `<div class="prize-box"><b>Prize Claimed:</b> ₹${r.prize_amount} | <b>Claim Code:</b> <code>${r.prize_code}</code></div>` : `<div style="font-size:13px;color:#888">No prize claimed yet</div>`}
+        
+        <div style="margin-top:12px;font-weight:700;font-size:13px;color:#1A1810">Submitted Proof Attachments (${uploads.length}):</div>
+        ${uploads.length ? `
+          <div class="proof-grid">
+            ${uploads.map(u => {
+              const fullUrl = window.location.origin + u.file_path;
+              const isImg = u.mime_type && u.mime_type.startsWith("image/");
+              return `
+                <div class="proof-item">
+                  ${isImg ? `<img src="${fullUrl}" alt="${u.file_name}" />` : `<div style="padding:20px;background:#f0f0f0;margin-bottom:6px;border-radius:4px;font-weight:700">📄 PDF Document</div>`}
+                  <span class="proof-title">Day 0${u.challenge_id}</span>
+                  <span class="proof-file">${u.file_name}</span>
+                  <div style="margin-top:4px"><a href="${fullUrl}" target="_blank" style="font-size:11px;color:#0066cc">View Original File</a></div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `<div style="font-size:12px;color:#888;margin-top:4px">No proof files uploaded.</div>`}
+      </div>
+      `;
+    });
+
+    html += `</body></html>`;
+
+    printWin.document.open();
+    printWin.document.write(html);
+    printWin.document.close();
+  }
+
+  // Export CSV Data
+  function exportCSVReport(rows) {
+    let csv = "Name,Email,Points,Prize Amount,Claim Code,Total Uploads\n";
+    rows.forEach(r => {
+      const name = `"${(r.participant_name || "").replace(/"/g, '""')}"`;
+      const email = `"${(r.participant_email || "").replace(/"/g, '""')}"`;
+      const pts = r.total_points || 0;
+      const prize = r.prize_amount || "";
+      const code = `"${r.prize_code || ""}"`;
+      const uploads = (r.uploads || []).length;
+      csv += `${name},${email},${pts},${prize},${code},${uploads}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `oppam-campaign-data-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   // ================= Admin / Organiser View =================
   const openProofsUser = new Set();
   async function renderOrganiser() {
@@ -724,6 +837,22 @@
         slot.replaceChildren(el("p", {class: "fine", text: "No participants registered yet."}));
         return;
       }
+
+      const pdfBtn = el("button", {
+        class: "button",
+        type: "button",
+        style: "font-size:.88rem;padding:8px 16px",
+        onclick: () => exportFullPDFReport(rows),
+        text: "📄 Save / Download PDF Report (With Proof Images)"
+      });
+      const csvBtn = el("button", {
+        class: "button outline",
+        type: "button",
+        style: "font-size:.88rem;padding:8px 16px",
+        onclick: () => exportCSVReport(rows),
+        text: "📊 Download CSV Spreadsheet"
+      });
+      const toolbar = el("div", {style: "display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px"}, pdfBtn, csvBtn);
 
       const tbody = el("tbody");
       rows.forEach(r => {
@@ -782,6 +911,7 @@
       });
 
       slot.replaceChildren(
+        toolbar,
         el("div", {class: "table-scroll"},
           el("table", {},
             el("thead", {}, el("tr", {}, ...["Participant", "Points", "Prize", "Claim code", "Submitted Proofs"].map(h => el("th", {text: h})))),
