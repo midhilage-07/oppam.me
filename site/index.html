@@ -237,7 +237,16 @@ footer .wordmark{color:var(--ink)}
 
 <header class="site-header">
   <div class="wrap">
-    <a class="wordmark" href="#main">oppam.me<span>The Good-for-Me Games</span></a>
+    <a class="wordmark" href="#main" aria-label="oppam.me">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg viewBox="0 0 100 100" style="width:28px;height:28px;flex-shrink:0" aria-hidden="true">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#FAB814" stroke-width="14"/>
+          <path d="M 22 68 C 36 84, 64 84, 78 68 C 62 82, 38 82, 22 68 Z" fill="#FAB814"/>
+        </svg>
+        <span style="font-weight:800;font-size:1.35rem;letter-spacing:-.03em;color:var(--ink);line-height:1">oppam.me</span>
+      </div>
+      <span style="font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:0;margin-top:2px">The Good-for-Me Games</span>
+    </a>
     <nav aria-label="Sections">
       <a href="#challenges">Challenges</a>
       <a href="#leaderboard">Leaderboard</a>
@@ -374,7 +383,15 @@ footer .wordmark{color:var(--ink)}
 </main>
 
 <footer class="wrap">
-  <a class="wordmark" href="#main">oppam.me</a>
+  <a class="wordmark" href="#main" aria-label="oppam.me">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg viewBox="0 0 100 100" style="width:28px;height:28px;flex-shrink:0" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#FAB814" stroke-width="14"/>
+        <path d="M 22 68 C 36 84, 64 84, 78 68 C 62 82, 38 82, 22 68 Z" fill="#FAB814"/>
+      </svg>
+      <span style="font-weight:800;font-size:1.35rem;letter-spacing:-.03em;color:var(--ink);line-height:1">oppam.me</span>
+    </div>
+  </a>
   <p>This World Mental Health Day, take one little step back towards yourself.</p>
 </footer>
 

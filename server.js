@@ -5,14 +5,15 @@ const fs = require("fs");
 const multer = require("multer");
 const Database = require("better-sqlite3");
 
-// Ensure data and uploads directories exist
-const dataDir = path.join(__dirname, "data");
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+// Ensure data and uploads directories exist (supports RENDER persistent disk path via DATA_DIR env var)
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
+const uploadsDir = process.env.UPLOADS_DIR || path.join(DATA_DIR, "uploads");
+
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // Initialize Database
-const db = new Database(path.join(dataDir, "game.db"));
+const db = new Database(path.join(DATA_DIR, "game.db"));
 
 // Set up DB Schema
 db.exec(`
@@ -282,15 +283,11 @@ app.get("/api/leaderboard", (req, res) => {
 
     const sanitized = data.map(r => {
       const isMe = requesterEmail && requesterEmail === r.player_email.toLowerCase();
-      if (requesterIsAdmin || isMe) {
-        return r;
-      } else {
-        return {
-          player_name: "Participant",
-          player_email: "",
-          player_points: r.player_points
-        };
-      }
+      return {
+        player_name: r.player_name,
+        player_email: (requesterIsAdmin || isMe) ? r.player_email : "",
+        player_points: r.player_points
+      };
     });
 
     return res.json({ success: true, data: sanitized });

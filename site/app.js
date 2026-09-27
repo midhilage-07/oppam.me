@@ -686,13 +686,9 @@
         if (r.player_points !== prev) { rank = i + 1; prev = r.player_points; }
         const isMe = state.user && state.user.email && state.user.email.toLowerCase() === (r.player_email || "").toLowerCase();
         
-        let displayName = "Participant";
+        let displayName = r.player_name || "Participant";
         if (isMe) {
           displayName = (state.user.name || r.player_name) + " (you)";
-        } else if (isAdmin) {
-          displayName = r.player_name;
-        } else {
-          displayName = "Participant";
         }
 
         return el("li", {
