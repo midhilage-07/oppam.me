@@ -91,9 +91,13 @@ function getRandomPrize() {
 
 // API Routes
 
-const ADMIN_EMAILS = ["midhu@gmail.com"];
+const ADMIN_EMAILS = ["midhu@gmail.com", "midhilage@gmail.com", "midhu@oppam.me", "midhilage@oppam.me"];
 function isAdminEmail(email) {
-  return ADMIN_EMAILS.includes((email || "").toString().trim().toLowerCase());
+  if (!email) return false;
+  const e = email.toString().trim().toLowerCase();
+  if (ADMIN_EMAILS.includes(e)) return true;
+  const username = e.split("@")[0];
+  return username === "midhu" || username === "midhilage";
 }
 
 // 1. Auth Login / Register
@@ -256,6 +260,9 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
 // 4. Leaderboard API
 app.get("/api/leaderboard", (req, res) => {
   try {
+    const requesterEmail = (req.headers["x-user-email"] || req.query.email || "").toString().trim().toLowerCase();
+    const requesterIsAdmin = isAdminEmail(requesterEmail);
+
     const query = `
       SELECT u.name as player_name, u.email as player_email, COUNT(c.challenge_id) * 10 as player_points
       FROM users u
@@ -265,7 +272,21 @@ app.get("/api/leaderboard", (req, res) => {
       LIMIT 50
     `;
     const data = db.prepare(query).all();
-    return res.json({ success: true, data });
+
+    const sanitized = data.map(r => {
+      const isMe = requesterEmail && requesterEmail === r.player_email.toLowerCase();
+      if (requesterIsAdmin || isMe) {
+        return r;
+      } else {
+        return {
+          player_name: "Participant",
+          player_email: "",
+          player_points: r.player_points
+        };
+      }
+    });
+
+    return res.json({ success: true, data: sanitized });
   } catch (err) {
     console.error("Leaderboard error:", err);
     return res.status(500).json({ error: "Server error fetching leaderboard." });

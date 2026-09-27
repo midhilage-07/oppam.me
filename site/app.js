@@ -27,15 +27,30 @@
 
   // ================= Helpers =================
   const $ = s => document.querySelector(s);
+  const checkIsAdmin = email => {
+    if (!email) return false;
+    const e = email.toString().trim().toLowerCase();
+    const adminList = ["midhu@gmail.com", "midhilage@gmail.com", "midhu@oppam.me", "midhilage@oppam.me"];
+    if (adminList.includes(e)) return true;
+    const username = e.split("@")[0];
+    return username === "midhu" || username === "midhilage";
+  };
+
   const el = (tag, attrs = {}, ...kids) => {
     const n = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
       if (k === "class") n.className = v;
-      else if (k === "text") n.textContent = v;
+      else if (k === "text") {
+        if (v != null && v !== "null" && v !== "undefined") {
+          n.textContent = v;
+        }
+      }
       else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
       else if (v !== false && v != null) n.setAttribute(k, v === true ? "" : v);
     }
-    for (const k of kids) if (k != null) n.append(k);
+    for (const k of kids.flat()) {
+      if (k != null && k !== false && k !== "" && k !== "null" && k !== "undefined") n.append(k);
+    }
     return n;
   };
   const rupee = n => "₹" + Number(n).toLocaleString("en-IN");
@@ -124,7 +139,7 @@
 
       state.user = data.user;
       localStorage.setItem("gfm_user", JSON.stringify(data.user));
-      toast(`Welcome, ${data.user.name}!`);
+      toast(`Login successfully! Welcome ${data.user.name} ✓`);
       await loadUserData();
     } catch (err) {
       state.authMsg = err.message || "Login failed. Please try again.";
@@ -144,6 +159,8 @@
     state.isAdminView = false;
     localStorage.removeItem("gfm_user");
     $("#organiser").hidden = true;
+    const navOrg = $("#navOrganiser");
+    if (navOrg) navOrg.style.display = "none";
     toast("You have signed out.");
     renderAll();
     loadLeaderboard();
@@ -159,7 +176,7 @@
       if (data.user && typeof data.user.isAdmin !== "undefined") {
         state.user.isAdmin = data.user.isAdmin;
       } else {
-        state.user.isAdmin = state.user.email.toLowerCase() === "midhu@gmail.com";
+        state.user.isAdmin = checkIsAdmin(state.user.email);
       }
       state.loaded = true;
 
@@ -196,13 +213,13 @@
       const nameInput = el("input", {
         type: "text",
         required: true,
-        placeholder: "Your Name (e.g. Alex Smith)",
+        placeholder: "e.g. midhilage",
         "aria-label": "Your Name"
       });
       const emailInput = el("input", {
         type: "email",
         required: true,
-        placeholder: "Unique Email ID (e.g. alex@example.com)",
+        placeholder: "e.g. midhilage@gmail.com",
         "aria-label": "Email ID"
       });
 
@@ -226,13 +243,17 @@
         loginUser(nameInput.value.trim(), emailInput.value.trim());
       });
 
-      panel.replaceChildren(
+      const children = [
         el("p", {class: "kicker", text: "Join the Good-for-Me Games"}),
         el("h3", {text: "Login with Name & Email"}),
         el("p", {class: "fine", style: "margin:4px 0 10px", text: "Enter your unique email ID to log in or create your participant profile."}),
-        form,
-        state.authMsg ? el("p", {class: "auth-msg" + (state.authErr ? " err" : ""), style: "margin-top:10px", text: state.authMsg}) : null
-      );
+        form
+      ];
+      if (state.authMsg && state.authMsg !== "null" && state.authMsg !== "undefined") {
+        children.push(el("p", {class: "auth-msg" + (state.authErr ? " err" : ""), style: "margin-top:10px", text: state.authMsg}));
+      }
+
+      panel.replaceChildren(...children);
       return;
     }
 
@@ -639,23 +660,40 @@
   async function loadLeaderboard() {
     const slot = $("#boardSlot");
     try {
-      const res = await fetch("/api/leaderboard");
+      let url = "/api/leaderboard";
+      const headers = {};
+      if (state.user && state.user.email) {
+        headers["x-user-email"] = state.user.email;
+        url += "?email=" + encodeURIComponent(state.user.email);
+      }
+      const res = await fetch(url, { headers });
       const data = await res.json();
       if (!data.success || !data.data || !data.data.length) {
         slot.replaceChildren(el("p", {class: "empty", text: "No players on the leaderboard yet. Be the first to complete a challenge!"}));
         return;
       }
 
+      const isAdmin = state.user && state.user.isAdmin;
       let rank = 0, prev = null;
       slot.replaceChildren(el("ol", {class: "board"}, ...data.data.map((r, i) => {
         if (r.player_points !== prev) { rank = i + 1; prev = r.player_points; }
-        const isMe = state.user && state.user.email && state.user.email.toLowerCase() === r.player_email.toLowerCase();
+        const isMe = state.user && state.user.email && state.user.email.toLowerCase() === (r.player_email || "").toLowerCase();
+        
+        let displayName = "Participant";
+        if (isMe) {
+          displayName = (state.user.name || r.player_name) + " (you)";
+        } else if (isAdmin) {
+          displayName = r.player_name;
+        } else {
+          displayName = "Participant";
+        }
+
         return el("li", {
           class: isMe ? "me" : "",
           style: "grid-template-columns:34px 1fr auto"
         },
           el("span", {class: "rank", text: String(rank)}),
-          el("span", {class: "name", text: r.player_name + (isMe ? " (you)" : "")}),
+          el("span", {class: "name", text: displayName}),
           el("span", {class: "pts", text: `${r.player_points} pts`})
         );
       })));
