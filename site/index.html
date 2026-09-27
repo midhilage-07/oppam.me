@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Good-for-Me Games | Oppam</title>
+<meta name="description" content="Seven small challenges. Your pace. Your kind of good.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#F6F8F3; --surface:#FFFFFF; --ink:#16241D; --muted:#56675E; --line:#D9E2DA;
+  --leaf:#2D6A4B; --leaf-soft:#E2EEE6; --leaf-ink:#FFFFFF;
+  --sun:#F4B52C; --sun-deep:#C98A0B; --sun-soft:#FDF1D4;
+  --deep:#15352A; --deep-ink:#EAF3EE; --deep-muted:#A9C4B6;
+  --danger:#A63D2F;
+  --radius-l:22px; --radius-m:14px; --radius-s:9px;
+  --font:"Host Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101915; --surface:#17231D; --ink:#E6EFE9; --muted:#9BB0A4; --line:#26362D;
+    --leaf:#7CC49C; --leaf-soft:#1D3328; --leaf-ink:#0E1A14;
+    --sun:#F4BE45; --sun-deep:#D89A1C; --sun-soft:#33291166;
+    --deep:#0B2219; --deep-ink:#E6F1EB; --deep-muted:#96B5A5;
+    --danger:#E58B7C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101915; --surface:#17231D; --ink:#E6EFE9; --muted:#9BB0A4; --line:#26362D;
+  --leaf:#7CC49C; --leaf-soft:#1D3328; --leaf-ink:#0E1A14;
+  --sun:#F4BE45; --sun-deep:#D89A1C; --sun-soft:#33291166;
+  --deep:#0B2219; --deep-ink:#E6F1EB; --deep-muted:#96B5A5;
+  --danger:#E58B7C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:3px;border-radius:6px}
+.wrap{width:min(1120px,100% - 40px);margin-inline:auto}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;z-index:50}
+.skip:focus{left:12px}
+h1,h2,h3{line-height:1.08;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(2.8rem,7vw,5.4rem);font-weight:800;letter-spacing:-.035em}
+h2{font-size:clamp(1.9rem,4vw,2.9rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+p{margin:0}
+.kicker{font-size:.9rem;font-weight:600;color:var(--leaf);margin-bottom:12px}
+.fine{font-size:.85rem;color:var(--muted);line-height:1.5}
+.button{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:650;font-size:1rem;border:2px solid var(--leaf);background:var(--leaf);color:var(--leaf-ink);padding:12px 22px;border-radius:999px;cursor:pointer;text-decoration:none;transition:transform .15s ease, background .15s}
+.button:hover{transform:translateY(-1px)}
+.button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.button.outline{background:transparent;color:var(--leaf)}
+.button.sun{background:var(--sun);border-color:var(--sun);color:#2A1D00}
+
+/* header */
+.site-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:64px}
+.wordmark{text-decoration:none;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;display:flex;flex-direction:column;line-height:1.1}
+.wordmark span{font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:0}
+.site-header nav{display:flex;gap:22px;font-weight:550;font-size:.95rem}
+.site-header nav a{text-decoration:none;color:var(--muted)}
+.site-header nav a:hover{color:var(--ink)}
+.me-chip{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--muted)}
+.me-chip img{width:28px;height:28px;border-radius:50%}
+@media (max-width:760px){.site-header nav{display:none}}
+
+/* intro */
+.intro{display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:end;padding:72px 0 64px}
+.intro .lede{font-size:1.2rem;color:var(--muted);max-width:30ch;margin:22px 0 30px}
+.progress-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-l);padding:28px}
+.score{display:flex;align-items:baseline;gap:8px;margin:4px 0 20px}
+.score strong{font-size:4rem;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.score small{font-size:1.05rem;color:var(--muted);font-weight:550}
+.segments{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
+.segments span{height:42px;border-radius:10px;background:var(--leaf-soft);display:grid;place-items:center;font-size:1.05rem;color:var(--muted);transition:background .3s,color .3s}
+.segments span.done{background:var(--leaf);color:var(--leaf-ink)}
+.status-line{font-size:.95rem;color:var(--muted)}
+@media (max-width:860px){.intro{grid-template-columns:1fr;padding:48px 0}}
+
+.messages{min-height:0}
+.notice{background:var(--sun-soft);border:1px solid var(--sun);border-radius:var(--radius-m);padding:14px 18px;margin-bottom:24px;font-size:.95rem}
+
+/* challenges */
+.challenge-section{padding:72px 0;border-top:1px solid var(--line)}
+.section-top{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:36px;flex-wrap:wrap}
+.section-top > p{color:var(--muted);text-align:right}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.mission-card{font:inherit;color:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-m);padding:20px;display:flex;flex-direction:column;gap:10px;min-height:230px;cursor:pointer;position:relative;transition:border-color .15s, transform .15s}
+.mission-card:hover{border-color:var(--leaf);transform:translateY(-2px)}
+.card-meta{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);font-weight:600}
+.card-symbol{font-size:2rem;line-height:1;color:var(--leaf);margin:8px 0 4px}
+.mission-card p{color:var(--muted);font-size:.95rem;flex:1}
+.card-link{font-size:.9rem;font-weight:650;color:var(--leaf)}
+.mission-card.done{background:var(--leaf);border-color:var(--leaf);color:var(--leaf-ink)}
+.mission-card.done .card-meta,.mission-card.done p,.mission-card.done .card-link,.mission-card.done .card-symbol{color:var(--leaf-ink)}
+.mission-card.done .card-meta,.mission-card.done p{opacity:.85}
+.join-card{cursor:default;background:var(--sun-soft);border-color:var(--sun)}
+.join-card:hover{transform:none;border-color:var(--sun)}
+.big-number{font-size:4.2rem;font-weight:800;letter-spacing:-.05em;line-height:.9;color:var(--sun-deep)}
+.section-note{margin-top:22px}
+@media (max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.cards{grid-template-columns:1fr}.mission-card{min-height:0}.section-top > p{text-align:left}}
+
+/* dialog */
+dialog{border:none;border-radius:var(--radius-l);padding:0;max-width:min(560px,calc(100% - 32px));width:100%;background:var(--surface);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,20,15,.5)}
+.dlg{padding:30px}
+.dlg-head{display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:14px}
+.dlg .card-symbol{font-size:2.4rem}
+.dlg ul{padding-left:1.2em;margin:16px 0;color:var(--muted)}
+.dlg li{margin:6px 0}
+.close{font:inherit;background:none;border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1.2rem;flex:none}
+.dlg-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;align-items:center}
+
+/* rewards + leaderboard */
+.rewards{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;padding:80px 0}
+.reward-ticket{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-l);padding:32px;position:relative}
+.prize-range{font-size:clamp(2.4rem,5vw,3.4rem);font-weight:800;letter-spacing:-.03em;color:var(--sun-deep);margin:16px 0 6px}
+.reward-ticket > p{color:var(--muted)}
+.reward-slot{margin:26px 0 18px}
+.locked{border:2px dashed var(--line);border-radius:var(--radius-m);padding:22px;text-align:center;font-weight:650;color:var(--muted)}
+details{border-top:1px solid var(--line);padding:14px 0}
+details:last-child{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;font-weight:650;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:1.3rem;line-height:1;color:var(--leaf)}
+details[open] summary::after{content:"–"}
+details p{margin-top:10px;color:var(--muted);font-size:.95rem}
+
+/* the scratch card */
+.scratch{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/10;background:var(--deep);color:var(--deep-ink);user-select:none;-webkit-user-select:none;touch-action:none}
+.scratch .prize{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:20px}
+.scratch .prize .amt{font-size:clamp(3rem,10vw,4.6rem);font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--sun)}
+.scratch .prize .code{font-size:.95rem;letter-spacing:.08em;font-weight:650;color:var(--deep-muted)}
+.scratch .prize .brand{position:absolute;left:18px;top:14px;font-weight:800;font-size:.95rem;color:var(--deep-muted)}
+.scratch canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;transition:opacity .6s ease}
+.scratch canvas.gone{opacity:0;pointer-events:none}
+.scratch-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.linkish{font:inherit;background:none;border:none;color:var(--leaf);font-weight:650;cursor:pointer;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
+
+#leaderboard > p{color:var(--muted)}
+.board{list-style:none;padding:0;margin:26px 0 18px;display:flex;flex-direction:column;gap:8px}
+.board li{display:grid;grid-template-columns:34px 36px 1fr auto;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);padding:10px 14px}
+.board li.me{border-color:var(--leaf);box-shadow:inset 3px 0 0 var(--leaf)}
+.board .rank{font-weight:750;color:var(--muted);font-variant-numeric:tabular-nums}
+.board img{width:34px;height:34px;border-radius:50%}
+.board .name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board .pts{font-weight:750;font-variant-numeric:tabular-nums}
+.empty{margin:26px 0 18px;padding:22px;border:2px dashed var(--line);border-radius:var(--radius-m);color:var(--muted)}
+@media (max-width:860px){.rewards{grid-template-columns:1fr;padding:56px 0}}
+
+/* share */
+.share-section{padding:72px 0;border-top:1px solid var(--line)}
+.share-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:48px}
+.share-grid > div:first-child p:last-child{color:var(--muted);margin-top:16px}
+label{font-weight:650;display:block;margin-bottom:8px}
+textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-m);padding:14px;resize:vertical}
+textarea:focus{border-color:var(--leaf);outline:none;box-shadow:0 0 0 3px var(--leaf-soft)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+@media (max-width:760px){.share-grid{grid-template-columns:1fr;gap:28px}}
+
+/* care */
+.care-section{background:var(--deep);color:var(--deep-ink);padding:88px 0}
+.care-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.care-section .kicker{color:var(--sun)}
+.care-section h2{font-size:clamp(2.2rem,5vw,3.6rem)}
+.care-section p{color:var(--deep-muted);margin-top:18px}
+.care-status{display:inline-block;margin-top:24px;background:var(--sun);color:#2A1D00;font-weight:700;font-size:.85rem;padding:7px 14px;border-radius:999px}
+.care-section .fine{color:var(--deep-muted)}
+.care-menu{display:flex;flex-direction:column}
+.care-item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:18px 0;border-top:1px solid color-mix(in srgb,var(--deep-ink) 18%,transparent)}
+.care-item strong{display:block;font-size:1.15rem}
+.care-item small{display:block;color:var(--deep-muted);font-size:.95rem;margin-top:2px}
+.care-item span{color:var(--sun)}
+.privacy{font-size:.9rem;border-top:1px solid color-mix(in srgb,var(--deep-ink) 18%,transparent);padding-top:18px}
+@media (max-width:860px){.care-grid{grid-template-columns:1fr;gap:36px}}
+
+/* faq */
+.faq{display:grid;grid-template-columns:1fr 1.5fr;gap:48px;padding:80px 0}
+@media (max-width:760px){.faq{grid-template-columns:1fr;gap:24px;padding:56px 0}}
+
+/* organiser */
+.organiser{padding:56px 0;border-top:1px solid var(--line)}
+.organiser[hidden]{display:none}
+.org-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-l);padding:28px}
+.pool-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 24px}
+.pool-row span{background:var(--leaf-soft);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:600;font-variant-numeric:tabular-nums}
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.95rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-size:.82rem;color:var(--muted);font-weight:650}
+td.code{font-weight:650;letter-spacing:.05em}
+
+footer{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:36px 0 48px;border-top:1px solid var(--line);color:var(--muted);flex-wrap:wrap}
+footer .wordmark{color:var(--ink)}
+
+.up-box{margin-top:18px;border:2px dashed var(--line);border-radius:var(--radius-m);padding:18px;text-align:center}
+.up-box.drag{border-color:var(--leaf);background:var(--leaf-soft)}
+.up-box input{position:absolute;width:1px;height:1px;opacity:0}
+.up-list{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:8px;text-align:left}
+.up-list li{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;background:var(--bg);border-radius:var(--radius-s);padding:8px 10px}
+.up-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--leaf-soft);display:grid;place-items:center;font-size:.75rem;font-weight:700;color:var(--leaf)}
+.up-name{font-size:.92rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-name small{display:block;font-weight:500;color:var(--muted)}
+.up-err{color:var(--danger);font-size:.9rem;margin-top:10px}
+.people{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:8px}
+.people > li{border:1px solid var(--line);border-radius:var(--radius-s);padding:10px 14px}
+.people .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.proofs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+.proof{background:var(--bg);border-radius:var(--radius-s);padding:8px;font-size:.82rem}
+.proof img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;display:block;margin-bottom:6px;cursor:zoom-in}
+.proof b{display:block}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:600;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.auth-form{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.auth-form input{font:inherit;font-size:1rem;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-s);background:var(--bg);color:var(--ink);width:100%}
+.auth-form input:focus{outline:none;border-color:var(--leaf);box-shadow:0 0 0 3px var(--leaf-soft)}
+.auth-form .button{justify-content:center}
+.auth-msg{font-size:.92rem;color:var(--muted)}
+.auth-msg.err{color:var(--danger)}
+.signed{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:.88rem;color:var(--muted)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="#main">oppam.me<span>The Good-for-Me Games</span></a>
+    <nav aria-label="Sections">
+      <a href="#challenges">Challenges</a>
+      <a href="#leaderboard">Leaderboard</a>
+      <a href="#rewards">Your reward</a>
+      <a href="#share">Share</a>
+      <a id="navOrganiser" href="javascript:void(0)" onclick="toggleOrganiserView()" style="display:none">Organiser View</a>
+    </nav>
+    
+  </div>
+</header>
+
+<main id="main">
+  <section class="intro wrap">
+    <div>
+      <p class="kicker">Seven days. A little more you.</p>
+      <h1>Small wins.<br>Good for you.</h1>
+      <p class="lede">Move, make, play and connect. Seven gentle challenges, at your pace.</p>
+      <a class="button" href="#challenges">Find your kind of good</a>
+    </div>
+    <div class="progress-panel" id="panel"><p class="status-line">Loading…</p></div>
+  </section>
+
+  <div class="wrap messages" id="messages" aria-live="polite"></div>
+
+  <section id="challenges" class="challenge-section">
+    <div class="wrap">
+      <div class="section-top">
+        <div>
+          <p class="kicker">Your seven-day playbook</p>
+          <h2>Which one feels like you?</h2>
+        </div>
+        <p>10 points for each challenge.<br>Any order. Your pace.</p>
+      </div>
+      <div class="cards" id="cards"></div>
+      <p class="fine section-note">Upload a photo, screenshot or PDF to complete each challenge. Choose an equivalent activity that suits your abilities. Sharing on social media is optional and never earns extra points.</p>
+    </div>
+  </section>
+
+  <section class="wrap rewards" id="rewards">
+    <div class="reward-ticket">
+      <p class="kicker">A little something for you</p>
+      <h2>Seven small wins.<br>One surprise.</h2>
+      <p class="prize-range">₹10–₹5,000</p>
+      <p>Complete all seven challenges for 70 points to unlock one scratch card.</p>
+      <div class="reward-slot" id="rewardSlot"><div class="locked">70 more points to unlock</div></div>
+      <p class="fine">One card per employee, awarded once. A fixed pool of 200 prizes totals ₹25,000. Cards keep the same prize when reopened. Redemption is verified against your claim code.</p>
+      <details>
+        <summary>Prize amounts and availability</summary>
+        <p>1 × ₹5,000, 2 × ₹2,000, 5 × ₹1,000, 10 × ₹500, 2 × ₹100, 100 × ₹50 and 80 × ₹10. Prizes are randomly assigned without replacement, so chances change as cards are claimed. No purchase required.</p>
+      </details>
+    </div>
+    <div id="leaderboard">
+      <p class="kicker">A little friendly encouragement</p>
+      <h2>Every small win counts.</h2>
+      <p style="margin-top:14px">Employee names and points, updated every 30 seconds.</p>
+      <div id="boardSlot"><p class="empty">The starting line is open. Complete a challenge to be first on the board.</p></div>
+      <p class="fine">Points celebrate participation, not mental health or wellbeing. Uploaded files stay private to organisers.</p>
+    </div>
+  </section>
+
+  <section id="share" class="share-section">
+    <div class="wrap share-grid">
+      <div>
+        <p class="kicker">Celebrate your small wins</p>
+        <h2>A little good.<br>Worth sharing.</h2>
+        <p>Posting is completely optional. Review your words before you publish.</p>
+      </div>
+      <div>
+        <label for="post">Your LinkedIn post</label>
+        <textarea id="post" rows="5">I'm making a little more room for myself with Oppam's Good-for-Me Games. Seven small challenges, at my own pace. Small wins count. #Oppam #EmployeeWellbeing #GoodForMeGames</textarea>
+        <div class="actions">
+          <button class="button" id="copyPost" type="button">Copy post</button>
+          <a class="button outline" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener noreferrer">Open LinkedIn</a>
+        </div>
+        <p class="fine">Your reward code is never included.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="care-section" id="care">
+    <div class="wrap care-grid">
+      <div>
+        <p class="kicker">Care goes beyond the challenge</p>
+        <h2>That appointment you’ve been putting off.</h2>
+        <p>We’re planning access to a private healthcare consultation for every employee. Because taking care of yourself deserves space on the calendar.</p>
+        <span class="care-status">Partner bookings coming soon</span>
+        <p class="fine">Available independently of challenge participation. Providers, availability and benefits will be confirmed before launch.</p>
+      </div>
+      <div class="care-menu">
+        <div class="care-item"><p style="margin:0"><strong>General health</strong><small>Discuss concerns and preventive care.</small></p><span aria-hidden="true">＋</span></div>
+        <div class="care-item"><p style="margin:0"><strong>Food and nutrition</strong><small>Advice that fits your life and routine.</small></p><span aria-hidden="true">＋</span></div>
+        <div class="care-item"><p style="margin:0"><strong>Reproductive health</strong><small>Private conversations with a specialist.</small></p><span aria-hidden="true">＋</span></div>
+        <div class="care-item"><p style="margin:0"><strong>Movement and fitness</strong><small>Find a comfortable place to begin.</small></p><span aria-hidden="true">＋</span></div>
+        <p class="privacy">Your health conversations stay with your care provider. Medical information never appears on the leaderboard.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap faq">
+    <div>
+      <p class="kicker">Your week, your way</p>
+      <h2>A few good questions.</h2>
+    </div>
+    <div>
+      <details>
+        <summary>Do I need to upload something?</summary>
+        <p>Yes. Open any challenge, do the activity in whatever way suits you, then upload a photo, screenshot or PDF of it. The challenge is marked complete as soon as your upload finishes. Photos can be up to 15 MB and PDFs up to 5 MB, with up to three files per challenge. Only you and the organisers can see your files. Avoid uploading private health information or other people’s photos without their permission.</p>
+      </details>
+      <details>
+        <summary>How do I redeem my reward?</summary>
+        <p>After 70 points, unlock and scratch your card, then download it or take a screenshot. Send it to your campaign organiser through your usual contact channel. They will verify the claim code and arrange the reward manually.</p>
+      </details>
+      <details>
+        <summary>Can I participate remotely or on a night shift?</summary>
+        <p>Yes. Complete the activities in any order and choose an equivalent activity that works for you. Healthcare benefits are separate from challenge points; partner booking details are still to be confirmed.</p>
+      </details>
+      <details>
+        <summary>Who can see my progress?</summary>
+        <p>Your name and total points appear on the leaderboard for colleagues. Your uploads, prize and claim code are visible only to you and the campaign organisers.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="organiser" id="organiser" hidden>
+    <div class="wrap">
+      <div class="org-box">
+        <p class="kicker">Organiser view · only visible to organisers</p>
+        <h2>Campaign overview</h2>
+        <div id="drawCtl"></div>
+        <div id="poolInfo"></div>
+        <h2 style="margin-top:36px">Participants</h2>
+        <p class="fine" style="margin-top:8px">Check a person’s uploads and claim code before paying.</p>
+        <div id="claimsSlot"></div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <a class="wordmark" href="#main">oppam.me</a>
+  <p>For every person. In every team. On every shift.</p>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="dlg">
+    <div class="dlg-head">
+      <div>
+        <div class="card-meta" id="dlgMeta"></div>
+        <div class="card-symbol" id="dlgSymbol" aria-hidden="true"></div>
+        <h3 id="dlgTitle"></h3>
+      </div>
+      <button class="close" type="button" id="dlgClose" aria-label="Close">×</button>
+    </div>
+    <p id="dlgIntro" style="color:var(--muted)"></p>
+    <ul id="dlgIdeas"></ul>
+    <p class="fine">Any version that works for you counts. Choose an equivalent activity if these don’t suit your abilities or schedule. Avoid uploading private health information or other people’s photos without their permission.</p>
+    <div class="dlg-actions" id="dlgActions"></div>
+  </div>
+</dialog>
+
+<dialog id="nameDlg" aria-labelledby="nameTitle">
+  <form class="dlg" id="nameForm">
+    <h3 id="nameTitle">What should we call you?</h3>
+    <p class="fine" style="margin:8px 0 16px">This name appears on the leaderboard for your colleagues.</p>
+    <label for="nameInput">Your name</label>
+    <input id="nameInput" maxlength="60" autocomplete="name" style="font:inherit;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)">
+    <p class="up-err" id="nameErr" aria-live="polite"></p>
+    <div class="dlg-actions"><button class="button" type="submit">Save name</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
