@@ -155,6 +155,14 @@ app.post("/api/auth/login", (req, res) => {
   }
 });
 
+// Helper: Parse SQLite CURRENT_TIMESTAMP into milliseconds
+function parseSqliteDate(str) {
+  if (!str) return Date.now();
+  const iso = str.replace(" ", "T") + "Z";
+  const ms = Date.parse(iso);
+  return isNaN(ms) ? Date.now() : ms;
+}
+
 // 2. Get User State (Completions, Uploads, Prize)
 app.get("/api/user/me", (req, res) => {
   try {
@@ -168,8 +176,12 @@ app.get("/api/user/me", (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const completionsRows = db.prepare("SELECT challenge_id FROM completions WHERE user_email = ?").all(email);
+    const completionsRows = db.prepare("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?").all(email);
     const completedTaskIds = completionsRows.map(c => c.challenge_id);
+    const completionsMap = {};
+    completionsRows.forEach(c => {
+      completionsMap[c.challenge_id] = parseSqliteDate(c.completed_at);
+    });
 
     const uploads = db.prepare("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC").all(email);
     const prize = db.prepare("SELECT * FROM prizes WHERE user_email = ?").get(email);
@@ -177,6 +189,8 @@ app.get("/api/user/me", (req, res) => {
     return res.json({
       user: { id: user.id, email: user.email, name: user.name, isAdmin: isAdminEmail(user.email) },
       completions: completedTaskIds,
+      completionsMap,
+      serverTime: Date.now(),
       uploads,
       prize: prize || null
     });
@@ -190,7 +204,7 @@ app.get("/api/user/me", (req, res) => {
 app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
   try {
     const challengeId = parseInt(req.params.id, 10);
-    const email = (req.body.email || req.headers["x-user-email"] || "").toString().trim().toLowerCase();
+    const email = ((req.body && req.body.email) || req.headers["x-user-email"] || "").toString().trim().toLowerCase();
 
     if (!email) {
       return res.status(401).json({ error: "Please log in first to complete a task." });
@@ -215,6 +229,33 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
       return res.status(400).json({
         error: "Task already completed! Each email ID can only complete each task once."
       });
+    }
+
+    // Sequential & Time Validation: Must complete previous day's task and wait 24 hours
+    if (challengeId > 1) {
+      const prevCompletion = db.prepare(
+        "SELECT completed_at FROM completions WHERE user_email = ? AND challenge_id = ?"
+      ).get(email, challengeId - 1);
+
+      if (!prevCompletion) {
+        return res.status(400).json({
+          error: `Please complete Day ${challengeId - 1} task first before accessing Day ${challengeId}.`
+        });
+      }
+
+      const prevMs = parseSqliteDate(prevCompletion.completed_at);
+      const unlockTime = prevMs + (24 * 60 * 60 * 1000);
+      const now = Date.now();
+
+      if (now < unlockTime) {
+        const diffMs = unlockTime - now;
+        const hrs = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        const secs = Math.floor((diffMs % 60000) / 1000);
+        return res.status(400).json({
+          error: `Day ${challengeId - 1} task completed successfully. Day ${challengeId} task will be available in ${hrs}h ${mins}m ${secs}s.`
+        });
+      }
     }
 
     // Record completion in database
@@ -243,14 +284,21 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
       prize = db.prepare("SELECT * FROM prizes WHERE user_email = ?").get(email);
     }
 
-    const completionsRows = db.prepare("SELECT challenge_id FROM completions WHERE user_email = ?").all(email);
+    const completionsRows = db.prepare("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?").all(email);
     const completedTaskIds = completionsRows.map(c => c.challenge_id);
+    const completionsMap = {};
+    completionsRows.forEach(c => {
+      completionsMap[c.challenge_id] = parseSqliteDate(c.completed_at);
+    });
+
     const uploads = db.prepare("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC").all(email);
 
     return res.json({
       success: true,
       message: "Task completed successfully!",
       completions: completedTaskIds,
+      completionsMap,
+      serverTime: Date.now(),
       uploads,
       prize: prize || null
     });

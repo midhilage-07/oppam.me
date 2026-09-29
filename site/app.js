@@ -91,6 +91,8 @@
   const state = {
     user: null, // { email, name }
     done: new Set(),
+    completionsMap: {}, // challenge_id -> completed_at timestamp in ms
+    serverOffset: 0, // serverTime - Date.now()
     uploads: [],
     prize: null,
     isAdminView: false,
@@ -103,6 +105,49 @@
   };
 
   const points = () => state.done.size * 10;
+  const getServerNow = () => Date.now() + (state.serverOffset || 0);
+
+  function getTaskLockStatus(n) {
+    if (n <= 1) return { locked: false };
+    const prevN = n - 1;
+    const prevDone = state.done.has(prevN);
+    if (!prevDone) {
+      return { locked: true, reason: "PREV_NOT_COMPLETED", prevN };
+    }
+    const prevMs = state.completionsMap[prevN];
+    if (!prevMs) {
+      return { locked: false };
+    }
+    const unlockTime = prevMs + (24 * 60 * 60 * 1000); // 24 hours lock
+    const now = getServerNow();
+    if (now >= unlockTime) {
+      return { locked: false };
+    }
+    const remainingMs = unlockTime - now;
+    return { locked: true, reason: "TIME_LOCKED", prevN, unlockTime, remainingMs };
+  }
+
+  function formatCountdown(ms) {
+    if (!ms || ms <= 0) return { hrs: "00", mins: "00", secs: "00", totalSecs: 0 };
+    const totalSecs = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    return {
+      hrs: String(hrs).padStart(2, "0"),
+      mins: String(mins).padStart(2, "0"),
+      secs: String(secs).padStart(2, "0"),
+      totalSecs
+    };
+  }
+
+  function formatShortTime(ms) {
+    const { hrs, mins, secs } = formatCountdown(ms);
+    if (parseInt(hrs, 10) > 0) {
+      return `${hrs}h ${mins}m`;
+    }
+    return `${mins}m ${secs}s`;
+  }
 
   // ================= Auth =================
   function initAuth() {
@@ -160,6 +205,7 @@
   function signOut() {
     state.user = null;
     state.done = new Set();
+    state.completionsMap = {};
     state.uploads = [];
     state.prize = null;
     state.loaded = true;
@@ -178,6 +224,10 @@
     try {
       const data = await apiFetch(`/api/user/me?email=${encodeURIComponent(state.user.email)}`);
       state.done = new Set(data.completions || []);
+      state.completionsMap = data.completionsMap || {};
+      if (data.serverTime) {
+        state.serverOffset = data.serverTime - Date.now();
+      }
       state.uploads = data.uploads || [];
       state.prize = data.prize || null;
       if (data.user && typeof data.user.isAdmin !== "undefined") {
@@ -301,16 +351,44 @@
   function renderCards() {
     const cards = CHALLENGES.map(c => {
       const done = state.done.has(c.n);
+      const lockStatus = state.user ? getTaskLockStatus(c.n) : { locked: false };
+      
+      let cardClass = "mission-card";
+      let metaText = done ? "Completed · 10 pts" : "10 points";
+      let linkText = done ? "Task Completed ✓" : "View challenge & submit";
+
+      if (done) {
+        cardClass += " done";
+      } else if (lockStatus.locked) {
+        cardClass += " locked-time";
+        metaText = "Locked";
+        if (lockStatus.reason === "PREV_NOT_COMPLETED") {
+          linkText = `🔒 Complete Day 0${lockStatus.prevN} first`;
+        } else if (lockStatus.reason === "TIME_LOCKED") {
+          linkText = `🔒 Available in ${formatShortTime(lockStatus.remainingMs)}`;
+        }
+      }
+
       return el("button", {
-        class: "mission-card" + (done ? " done" : ""),
+        class: cardClass,
         type: "button",
-        onclick: () => openChallenge(c)
+        onclick: () => {
+          if (done) {
+            openChallenge(c);
+            return;
+          }
+          if (lockStatus.locked) {
+            openLockValidationModal(c, lockStatus);
+            return;
+          }
+          openChallenge(c);
+        }
       },
-        el("div", {class: "card-meta"}, el("span", {text: `Day 0${c.n}`}), el("span", {text: done ? "Completed · 10 pts" : "10 points"})),
+        el("div", {class: "card-meta"}, el("span", {text: `Day 0${c.n}`}), el("span", {text: metaText})),
         el("span", {class: "card-symbol", "aria-hidden": "true", text: c.sym}),
         el("h3", {text: c.title}),
         el("p", {text: c.short}),
-        el("span", {class: "card-link", text: done ? "Task Completed ✓" : "View challenge & submit"})
+        el("span", {class: "card-link", text: linkText})
       );
     });
 
@@ -323,6 +401,127 @@
 
     $("#cards").replaceChildren(...cards);
   }
+
+  // ================= Lock Validation & Success Dialog Handlers =================
+  let activeLockChallenge = null;
+
+  function openLockValidationModal(c, lockStatus) {
+    const lockDlg = $("#lockDlg");
+    activeLockChallenge = { c, lockStatus };
+
+    $("#lockClose").onclick = () => lockDlg.close();
+    $("#lockOkBtn").onclick = () => lockDlg.close();
+
+    if (lockStatus.reason === "PREV_NOT_COMPLETED") {
+      $("#lockIcon").textContent = "🔒";
+      $("#lockTitle").textContent = `Day 0${c.n} Task Locked`;
+      $("#lockIntro").replaceChildren(
+        el("span", {style: "font-weight:700;color:var(--ink);display:block;margin-bottom:6px", text: `Please complete Day 0${lockStatus.prevN} task first.`}),
+        el("span", {text: `You must complete Day 0${lockStatus.prevN} before accessing Day 0${c.n}.`})
+      );
+      $("#lockCountdownBox").style.display = "none";
+      $("#lockOkBtn").textContent = `Go to Day 0${lockStatus.prevN}`;
+      $("#lockOkBtn").onclick = () => {
+        lockDlg.close();
+        const prevCh = CHALLENGES.find(ch => ch.n === lockStatus.prevN);
+        if (prevCh) openChallenge(prevCh);
+      };
+    } else if (lockStatus.reason === "TIME_LOCKED") {
+      $("#lockIcon").textContent = "⏳";
+      $("#lockTitle").textContent = `Day 0${c.n} Task Time Validation`;
+
+      const unlockDate = new Date(lockStatus.unlockTime);
+      const timeStr = unlockDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const dateStr = unlockDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+      $("#lockIntro").replaceChildren(
+        el("div", {style: "background:var(--leaf-soft);border:1px solid var(--leaf);padding:14px 16px;border-radius:14px;margin-bottom:14px;text-align:center"},
+          el("span", {style: "font-weight:700;color:var(--leaf-ink);display:block;font-size:1.05rem;margin-bottom:4px", text: `✓ You have successfully completed the Day 0${lockStatus.prevN} task!`}),
+          el("span", {style: "font-size:.95rem;color:var(--ink);font-weight:600", text: `Day 0${c.n} task will open on ${dateStr} at ${timeStr}.`})
+        ),
+        el("span", {style: "font-size:1rem;color:var(--muted);font-weight:600", text: "Live time remaining until unlock:"})
+      );
+      $("#lockCountdownBox").style.display = "block";
+      updateLockCountdown();
+      $("#lockOkBtn").textContent = "Got it";
+      $("#lockOkBtn").onclick = () => lockDlg.close();
+    }
+
+    if (!lockDlg.open) lockDlg.showModal();
+  }
+
+  function updateLockCountdown() {
+    if (!activeLockChallenge) return;
+    const { c } = activeLockChallenge;
+    const lockStatus = getTaskLockStatus(c.n);
+    if (!lockStatus.locked || lockStatus.reason !== "TIME_LOCKED") {
+      // Unlocked!
+      $("#lockIcon").textContent = "🎉";
+      $("#lockTitle").textContent = `Day 0${c.n} Task Unlocked!`;
+      $("#lockIntro").replaceChildren(
+        el("span", {style: "font-weight:700;color:var(--leaf);display:block;font-size:1.1rem", text: `Day 0${c.n} task is now available!`})
+      );
+      $("#lockCountdownBox").style.display = "none";
+      $("#lockOkBtn").textContent = `Start Day 0${c.n} Task`;
+      $("#lockOkBtn").onclick = () => {
+        $("#lockDlg").close();
+        openChallenge(c);
+      };
+      return;
+    }
+
+    const { hrs, mins, secs } = formatCountdown(lockStatus.remainingMs);
+    $("#timerHrs").textContent = hrs;
+    $("#timerMins").textContent = mins;
+    $("#timerSecs").textContent = secs;
+  }
+
+  function openSubmissionSuccessModal(n) {
+    const successDlg = $("#successDlg");
+
+    // Restart SVG checkmark animation
+    const iconWrap = successDlg.querySelector(".success-icon-wrap");
+    if (iconWrap) {
+      const oldSvg = iconWrap.querySelector(".success-checkmark");
+      if (oldSvg) {
+        const newSvg = oldSvg.cloneNode(true);
+        oldSvg.parentNode.replaceChild(newSvg, oldSvg);
+      }
+    }
+
+    $("#successTitle").textContent = "Task Completed Successfully! 🎉";
+    $("#successMessage").textContent = `Your Day 0${n} task is successfully completed.`;
+    
+    if (n < 7) {
+      const unlockDate = new Date(getServerNow() + 24 * 60 * 60 * 1000);
+      const timeStr = unlockDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      $("#successUnlockNotice").textContent = `Day 0${n + 1} task will be available in 24 hours (around ${timeStr}).`;
+    } else {
+      $("#successUnlockNotice").textContent = "🎉 Congratulations! You have completed all 7 tasks and earned 70 points! Your scratch card is unlocked below!";
+    }
+
+    const closeBtn = $("#successCloseBtn");
+    closeBtn.onclick = () => {
+      successDlg.close();
+      if (n === 7) {
+        const rewardsSection = $("#rewards");
+        if (rewardsSection) rewardsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
+    if (!successDlg.open) successDlg.showModal();
+  }
+
+  // Live timer interval to update locked cards and live countdown modals
+  setInterval(() => {
+    if (state.user && state.done.size < 7) {
+      renderCards();
+      const lockDlg = $("#lockDlg");
+      if (lockDlg && lockDlg.open) {
+        updateLockCountdown();
+      }
+    }
+  }, 1000);
 
   // ================= Challenge Dialog & Task Completion Rules =================
   const dlg = $("#dlg");
@@ -462,13 +661,19 @@
       }
 
       state.done = new Set(data.completions || []);
+      state.completionsMap = data.completionsMap || {};
+      if (data.serverTime) {
+        state.serverOffset = data.serverTime - Date.now();
+      }
       state.uploads = data.uploads || [];
       state.prize = data.prize || null;
 
-      toast("Task completed! 10 points added. ✓");
       dlg.close();
       renderAll();
       loadLeaderboard();
+
+      // Show animated submission success popup
+      openSubmissionSuccessModal(n);
     } catch (err) {
       state.upErr = err.message || "Failed to submit task.";
       toast(err.message || "Error submitting task.");
