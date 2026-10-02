@@ -1,0 +1,481 @@
+{
+  "success": true,
+  "data": [
+    {
+      "participant_id": 16,
+      "participant_name": "Amrusha",
+      "participant_email": "amrushamh@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 13,
+          "user_email": "amrushamh@gmail.com",
+          "challenge_id": 1,
+          "file_name": "IMG_0336.jpeg",
+          "file_path": "/uploads/proof-1790919452718-174279623.jpeg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 6645370,
+          "created_at": "2026-10-02 05:37:35"
+        }
+      ]
+    },
+    {
+      "participant_id": 25,
+      "participant_name": "Anupama Surendran K",
+      "participant_email": "anupamasurendran@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 16,
+          "user_email": "anupamasurendran@oppam.me",
+          "challenge_id": 1,
+          "file_name": "IMG_3525.png",
+          "file_path": "/uploads/proof-1790921871429-556272031.png",
+          "mime_type": "image/png",
+          "size_bytes": 8492040,
+          "created_at": "2026-10-02 06:17:52"
+        }
+      ]
+    },
+    {
+      "participant_id": 2,
+      "participant_name": "Aswathy T L",
+      "participant_email": "aswathylovgi3@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 2,
+          "user_email": "aswathylovgi3@gmail.com",
+          "challenge_id": 1,
+          "file_name": "Screenshot_20261001_152246.jpg",
+          "file_path": "/uploads/proof-1790911871094-599722634.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 927763,
+          "created_at": "2026-10-02 03:31:11"
+        }
+      ]
+    },
+    {
+      "participant_id": 4,
+      "participant_name": "Aysha Fabeela",
+      "participant_email": "ayshafab@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 4,
+          "user_email": "ayshafab@gmail.com",
+          "challenge_id": 1,
+          "file_name": "IMG_0914.jpeg",
+          "file_path": "/uploads/proof-1790912503532-233977736.jpeg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 4116636,
+          "created_at": "2026-10-02 03:41:44"
+        }
+      ]
+    },
+    {
+      "participant_id": 22,
+      "participant_name": "Chithra",
+      "participant_email": "chithra@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 11,
+      "participant_name": "Cibita",
+      "participant_email": "cibita@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 8,
+          "user_email": "cibita@oppam.me",
+          "challenge_id": 1,
+          "file_name": "IMG_6034.jpeg",
+          "file_path": "/uploads/proof-1790917437112-393301794.jpeg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 215213,
+          "created_at": "2026-10-02 05:03:57"
+        }
+      ]
+    },
+    {
+      "participant_id": 13,
+      "participant_name": "Devika Vijayan",
+      "participant_email": "devika@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 10,
+          "user_email": "devika@oppam.me",
+          "challenge_id": 1,
+          "file_name": "20261001_121147.jpg",
+          "file_path": "/uploads/proof-1790917887030-577614781.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 5002441,
+          "created_at": "2026-10-02 05:11:28"
+        }
+      ]
+    },
+    {
+      "participant_id": 3,
+      "participant_name": "Elza Catherine Thomson",
+      "participant_email": "elza@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 3,
+          "user_email": "elza@oppam.me",
+          "challenge_id": 1,
+          "file_name": "IMG_7253.png",
+          "file_path": "/uploads/proof-1790912263458-977790239.png",
+          "mime_type": "image/png",
+          "size_bytes": 7094214,
+          "created_at": "2026-10-02 03:37:46"
+        }
+      ]
+    },
+    {
+      "participant_id": 12,
+      "participant_name": "Gayathri Soman",
+      "participant_email": "gayathrisoman@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 9,
+          "user_email": "gayathrisoman@oppam.me",
+          "challenge_id": 1,
+          "file_name": "Screenshot_20261002_103937_Samsung Health.jpg",
+          "file_path": "/uploads/proof-1790917816232-55316449.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 115199,
+          "created_at": "2026-10-02 05:10:16"
+        }
+      ]
+    },
+    {
+      "participant_id": 24,
+      "participant_name": "Haneena",
+      "participant_email": "haneena@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 19,
+      "participant_name": "Haneena",
+      "participant_email": "haneenafarhath072@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 15,
+      "participant_name": "Henza Gafoor",
+      "participant_email": "henzagafoor2020@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 12,
+          "user_email": "henzagafoor2020@gmail.com",
+          "challenge_id": 1,
+          "file_name": "Screenshot_20261001_151929_Gallery.jpg",
+          "file_path": "/uploads/proof-1790918666027-438127147.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 1068047,
+          "created_at": "2026-10-02 05:24:26"
+        }
+      ]
+    },
+    {
+      "participant_id": 18,
+      "participant_name": "Keerthika B",
+      "participant_email": "keerthibaskar07@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 15,
+          "user_email": "keerthibaskar07@gmail.com",
+          "challenge_id": 1,
+          "file_name": "Screenshot_20261001_184840.jpg",
+          "file_path": "/uploads/proof-1790919577874-177717844.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 217064,
+          "created_at": "2026-10-02 05:39:37"
+        }
+      ]
+    },
+    {
+      "participant_id": 17,
+      "participant_name": "Shalini Murali",
+      "participant_email": "shalini@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 14,
+          "user_email": "shalini@oppam.me",
+          "challenge_id": 1,
+          "file_name": "Screenshot_20261001-202008.jpg",
+          "file_path": "/uploads/proof-1790919479229-322693185.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 72627,
+          "created_at": "2026-10-02 05:37:59"
+        }
+      ]
+    },
+    {
+      "participant_id": 14,
+      "participant_name": "Sneha Sasikumar",
+      "participant_email": "snehasasikumar@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 11,
+          "user_email": "snehasasikumar@oppam.me",
+          "challenge_id": 1,
+          "file_name": "VID_20260925_204844_767.mp4",
+          "file_path": "/uploads/proof-1790918486958-489543345.mp4",
+          "mime_type": "video/mp4",
+          "size_bytes": 2750625,
+          "created_at": "2026-10-02 05:21:28"
+        }
+      ]
+    },
+    {
+      "participant_id": 1,
+      "participant_name": "Sreelakshmi",
+      "participant_email": "vbsreebala98@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 1,
+          "user_email": "vbsreebala98@gmail.com",
+          "challenge_id": 1,
+          "file_name": "IMG_20261001_181009.jpg",
+          "file_path": "/uploads/proof-1790910394600-74348533.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 3317191,
+          "created_at": "2026-10-02 03:06:35"
+        }
+      ]
+    },
+    {
+      "participant_id": 10,
+      "participant_name": "Surya P S",
+      "participant_email": "suryaps@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 7,
+          "user_email": "suryaps@oppam.me",
+          "challenge_id": 1,
+          "file_name": "WhatsApp Image 2026-10-02 at 10.29.09 AM.jpeg",
+          "file_path": "/uploads/proof-1790917308062-622353910.jpeg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 57221,
+          "created_at": "2026-10-02 05:01:48"
+        }
+      ]
+    },
+    {
+      "participant_id": 9,
+      "participant_name": "Thamina Begum",
+      "participant_email": "thamina@oppam.me",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 6,
+          "user_email": "thamina@oppam.me",
+          "challenge_id": 1,
+          "file_name": "2026-10-01 220234.png",
+          "file_path": "/uploads/proof-1790915193104-163263276.png",
+          "mime_type": "image/png",
+          "size_bytes": 2278682,
+          "created_at": "2026-10-02 04:26:33"
+        }
+      ]
+    },
+    {
+      "participant_id": 5,
+      "participant_name": "Thoufeeque EK",
+      "participant_email": "thfqek@gmail.com",
+      "total_points": 10,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": [
+        {
+          "id": 5,
+          "user_email": "thfqek@gmail.com",
+          "challenge_id": 1,
+          "file_name": "IMG_3555.png",
+          "file_path": "/uploads/proof-1790912761449-92609050.png",
+          "mime_type": "image/png",
+          "size_bytes": 934182,
+          "created_at": "2026-10-02 03:46:02"
+        }
+      ]
+    },
+    {
+      "participant_id": 8,
+      "participant_name": "Grace George",
+      "participant_email": "gracegeorge@oppam.me",
+      "total_points": 0,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 23,
+      "participant_name": "Muhsina P R",
+      "participant_email": "muhsina@oppam.me",
+      "total_points": 0,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 21,
+      "participant_name": "Sahla Mohammed",
+      "participant_email": "sahla@oppam.me",
+      "total_points": 0,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 20,
+      "participant_name": "Sahla Mohammed",
+      "participant_email": "sahlamohammed890@gmail.com",
+      "total_points": 0,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 6,
+      "participant_name": "liam",
+      "participant_email": "liam@gmail.com",
+      "total_points": 0,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    },
+    {
+      "participant_id": 7,
+      "participant_name": "mubashira",
+      "participant_email": "mubashira@oppam.me",
+      "total_points": 0,
+      "prize_id": null,
+      "prize_amount": null,
+      "prize_code": null,
+      "prize_paid": null,
+      "prize_claimed_at": null,
+      "uploads": []
+    }
+  ]
+}

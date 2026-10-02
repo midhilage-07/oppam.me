@@ -3,55 +3,141 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const { Pool } = require("pg");
 const Database = require("better-sqlite3");
 
-// Ensure data and uploads directories exist (supports RENDER persistent disk path via DATA_DIR env var)
+// Ensure data and uploads directories exist
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const uploadsDir = process.env.UPLOADS_DIR || path.join(DATA_DIR, "uploads");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
-// Initialize Database
-const db = new Database(path.join(DATA_DIR, "game.db"));
+// Check Database Connection (PostgreSQL if DATABASE_URL is set, else SQLite)
+const DATABASE_URL = process.env.DATABASE_URL;
+let isPg = false;
+let sqliteDb = null;
+let pgPool = null;
+
+if (DATABASE_URL) {
+  isPg = true;
+  pgPool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: DATABASE_URL.includes("localhost") ? false : { rejectUnauthorized: false }
+  });
+  console.log("Connected to PostgreSQL Database (Supabase / External DB)");
+} else {
+  sqliteDb = new Database(path.join(DATA_DIR, "game.db"));
+  console.log("Connected to Local SQLite Database");
+}
+
+// Database Abstraction Helpers
+async function dbQueryOne(sql, params = []) {
+  if (isPg) {
+    let pIdx = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${pIdx++}`);
+    const res = await pgPool.query(pgSql, params);
+    return res.rows[0] || null;
+  } else {
+    return sqliteDb.prepare(sql).get(...params) || null;
+  }
+}
+
+async function dbQueryAll(sql, params = []) {
+  if (isPg) {
+    let pIdx = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${pIdx++}`);
+    const res = await pgPool.query(pgSql, params);
+    return res.rows;
+  } else {
+    return sqliteDb.prepare(sql).all(...params);
+  }
+}
+
+async function dbRun(sql, params = []) {
+  if (isPg) {
+    let pIdx = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${pIdx++}`);
+    const res = await pgPool.query(pgSql, params);
+    return res;
+  } else {
+    return sqliteDb.prepare(sql).run(...params);
+  }
+}
 
 // Set up DB Schema
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS completions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_email TEXT NOT NULL,
-    challenge_id INTEGER NOT NULL,
-    completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_email, challenge_id)
-  );
-
-  CREATE TABLE IF NOT EXISTS uploads (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_email TEXT NOT NULL,
-    challenge_id INTEGER NOT NULL,
-    file_name TEXT NOT NULL,
-    file_path TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    size_bytes INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS prizes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_email TEXT UNIQUE NOT NULL,
-    amount INTEGER NOT NULL,
-    claim_code TEXT UNIQUE NOT NULL,
-    claimed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    paid INTEGER DEFAULT 0
-  );
-`);
+async function initDb() {
+  if (isPg) {
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS completions (
+        id SERIAL PRIMARY KEY,
+        user_email TEXT NOT NULL,
+        challenge_id INTEGER NOT NULL,
+        completed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_email, challenge_id)
+      );
+      CREATE TABLE IF NOT EXISTS uploads (
+        id SERIAL PRIMARY KEY,
+        user_email TEXT NOT NULL,
+        challenge_id INTEGER NOT NULL,
+        file_name TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        size_bytes BIGINT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS prizes (
+        id SERIAL PRIMARY KEY,
+        user_email TEXT UNIQUE NOT NULL,
+        amount INTEGER NOT NULL,
+        claim_code TEXT UNIQUE NOT NULL,
+        claimed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        paid INTEGER DEFAULT 0
+      );
+    `);
+  } else {
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS completions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_email TEXT NOT NULL,
+        challenge_id INTEGER NOT NULL,
+        completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_email, challenge_id)
+      );
+      CREATE TABLE IF NOT EXISTS uploads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_email TEXT NOT NULL,
+        challenge_id INTEGER NOT NULL,
+        file_name TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        size_bytes INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS prizes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_email TEXT UNIQUE NOT NULL,
+        amount INTEGER NOT NULL,
+        claim_code TEXT UNIQUE NOT NULL,
+        claimed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        paid INTEGER DEFAULT 0
+      );
+    `);
+  }
+}
+initDb().catch(err => console.error("DB Init error:", err));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,7 +149,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "site")));
 app.use("/uploads", express.static(uploadsDir));
 
-// Multer storage for uploaded proof files
+// Multer storage for uploaded proof files (Max 2 MB limit for photos & videos)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
@@ -74,7 +160,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 15 * 1024 * 1024 } // 15MB max file size
+  limits: { fileSize: 2 * 1024 * 1024 } // 2 MB max file size
 });
 
 // Helper: Prize Pool amounts & generator
@@ -91,25 +177,28 @@ function getRandomPrize() {
 }
 
 // API Routes
-
 const ADMIN_EMAILS = [
-  "midhu@gmail.com",
-  "midhilage@gmail.com",
-  "midhu@oppam.me",
-  "midhilage@oppam.me",
   "hr@oppam.me",
-  "mubashira@oppam.me"
+  "mubashira@oppam.me",
+  "midhu@gmail.com"
 ];
 function isAdminEmail(email) {
   if (!email) return false;
   const e = email.toString().trim().toLowerCase();
-  if (ADMIN_EMAILS.includes(e)) return true;
-  const username = e.split("@")[0];
-  return username === "midhu" || username === "midhilage" || username === "hr" || username === "mubashira";
+  return ADMIN_EMAILS.includes(e);
+}
+
+function parseSqliteDate(str) {
+  if (!str) return Date.now();
+  if (str instanceof Date) return str.getTime();
+  if (typeof str === "number") return str;
+  const iso = str.toString().replace(" ", "T") + (str.toString().includes("Z") ? "" : "Z");
+  const ms = Date.parse(iso);
+  return isNaN(ms) ? Date.now() : ms;
 }
 
 // 1. Auth Login / Register
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   try {
     let { email, name } = req.body;
     if (!email || !name) {
@@ -119,23 +208,19 @@ app.post("/api/auth/login", (req, res) => {
     email = email.trim().toLowerCase();
     name = name.trim();
 
-    // Basic email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "Please enter a valid email address." });
     }
 
-    // Check if user exists
-    let user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    let user = await dbQueryOne("SELECT * FROM users WHERE email = ?", [email]);
 
     if (!user) {
-      // Create new user (unique email)
-      const info = db.prepare("INSERT INTO users (email, name) VALUES (?, ?)").run(email, name);
-      user = { id: info.lastInsertRowid, email, name };
+      await dbRun("INSERT INTO users (email, name) VALUES (?, ?)", [email, name]);
+      user = await dbQueryOne("SELECT * FROM users WHERE email = ?", [email]);
     } else {
-      // If user exists, update name if changed
       if (user.name !== name) {
-        db.prepare("UPDATE users SET name = ? WHERE email = ?").run(name, email);
+        await dbRun("UPDATE users SET name = ? WHERE email = ?", [name, email]);
         user.name = name;
       }
     }
@@ -155,36 +240,28 @@ app.post("/api/auth/login", (req, res) => {
   }
 });
 
-// Helper: Parse SQLite CURRENT_TIMESTAMP into milliseconds
-function parseSqliteDate(str) {
-  if (!str) return Date.now();
-  const iso = str.replace(" ", "T") + "Z";
-  const ms = Date.parse(iso);
-  return isNaN(ms) ? Date.now() : ms;
-}
-
 // 2. Get User State (Completions, Uploads, Prize)
-app.get("/api/user/me", (req, res) => {
+app.get("/api/user/me", async (req, res) => {
   try {
     const email = (req.headers["x-user-email"] || req.query.email || "").toString().trim().toLowerCase();
     if (!email) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
-    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    const user = await dbQueryOne("SELECT * FROM users WHERE email = ?", [email]);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const completionsRows = db.prepare("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?").all(email);
+    const completionsRows = await dbQueryAll("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?", [email]);
     const completedTaskIds = completionsRows.map(c => c.challenge_id);
     const completionsMap = {};
     completionsRows.forEach(c => {
       completionsMap[c.challenge_id] = parseSqliteDate(c.completed_at);
     });
 
-    const uploads = db.prepare("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC").all(email);
-    const prize = db.prepare("SELECT * FROM prizes WHERE user_email = ?").get(email);
+    const uploads = await dbQueryAll("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC", [email]);
+    const prize = await dbQueryOne("SELECT * FROM prizes WHERE user_email = ?", [email]);
 
     return res.json({
       user: { id: user.id, email: user.email, name: user.name, isAdmin: isAdminEmail(user.email) },
@@ -200,8 +277,18 @@ app.get("/api/user/me", (req, res) => {
   }
 });
 
-// 3. Complete Task / Upload Proof
-app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
+// 3. Complete Task / Upload Proof (1 hour unlock delay, 2MB max file size)
+app.post("/api/challenges/:id/complete", (req, res, next) => {
+  upload.single("proof")(req, res, (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "File size exceeds 2 MB limit. Please upload a photo or video under 2 MB." });
+      }
+      return res.status(400).json({ error: err.message || "File upload error." });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     const challengeId = parseInt(req.params.id, 10);
     const email = ((req.body && req.body.email) || req.headers["x-user-email"] || "").toString().trim().toLowerCase();
@@ -214,16 +301,15 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
       return res.status(400).json({ error: "Invalid challenge ID." });
     }
 
-    // Check if user exists
-    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    const user = await dbQueryOne("SELECT * FROM users WHERE email = ?", [email]);
     if (!user) {
       return res.status(404).json({ error: "User not found. Please log in again." });
     }
 
-    // CRITICAL: Check if user has already completed this challenge!
-    const existingCompletion = db.prepare(
-      "SELECT * FROM completions WHERE user_email = ? AND challenge_id = ?"
-    ).get(email, challengeId);
+    const existingCompletion = await dbQueryOne(
+      "SELECT * FROM completions WHERE user_email = ? AND challenge_id = ?",
+      [email, challengeId]
+    );
 
     if (existingCompletion) {
       return res.status(400).json({
@@ -231,11 +317,12 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
       });
     }
 
-    // Sequential & Time Validation: Must complete previous day's task and wait 24 hours
+    // 1-hour delay between completing tasks
     if (challengeId > 1) {
-      const prevCompletion = db.prepare(
-        "SELECT completed_at FROM completions WHERE user_email = ? AND challenge_id = ?"
-      ).get(email, challengeId - 1);
+      const prevCompletion = await dbQueryOne(
+        "SELECT completed_at FROM completions WHERE user_email = ? AND challenge_id = ?",
+        [email, challengeId - 1]
+      );
 
       if (!prevCompletion) {
         return res.status(400).json({
@@ -244,7 +331,7 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
       }
 
       const prevMs = parseSqliteDate(prevCompletion.completed_at);
-      const unlockTime = prevMs + (24 * 60 * 60 * 1000);
+      const unlockTime = prevMs + (1 * 60 * 60 * 1000); // 1 HOUR DELAY
       const now = Date.now();
 
       if (now < unlockTime) {
@@ -252,46 +339,45 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
         const hrs = Math.floor(diffMs / 3600000);
         const mins = Math.floor((diffMs % 3600000) / 60000);
         const secs = Math.floor((diffMs % 60000) / 1000);
+        const timeRemainingStr = hrs > 0 ? `${hrs}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
         return res.status(400).json({
-          error: `Day ${challengeId - 1} task completed successfully. Day ${challengeId} task will be available in ${hrs}h ${mins}m ${secs}s.`
+          error: `Day ${challengeId - 1} task completed successfully. Day ${challengeId} task will be available in ${timeRemainingStr}.`
         });
       }
     }
 
-    // Record completion in database
-    db.prepare("INSERT INTO completions (user_email, challenge_id) VALUES (?, ?)").run(email, challengeId);
+    await dbRun("INSERT INTO completions (user_email, challenge_id) VALUES (?, ?)", [email, challengeId]);
 
-    // Save uploaded file if present
     if (req.file) {
       const filePath = "/uploads/" + req.file.filename;
-      db.prepare(`
+      await dbRun(`
         INSERT INTO uploads (user_email, challenge_id, file_name, file_path, mime_type, size_bytes)
         VALUES (?, ?, ?, ?, ?, ?)
-      `).run(email, challengeId, req.file.originalname, filePath, req.file.mimetype, req.file.size);
+      `, [email, challengeId, req.file.originalname, filePath, req.file.mimetype, req.file.size]);
     }
 
-    // Check total completed tasks for this user
-    const totalCompletions = db.prepare(
-      "SELECT COUNT(*) as count FROM completions WHERE user_email = ?"
-    ).get(email).count;
+    const totalCompletionsRow = await dbQueryOne(
+      "SELECT COUNT(*) as count FROM completions WHERE user_email = ?",
+      [email]
+    );
+    const totalCompletions = parseInt((totalCompletionsRow && totalCompletionsRow.count) || 0, 10);
 
-    // Check if 7 tasks are completed and generate Prize if not existing
-    let prize = db.prepare("SELECT * FROM prizes WHERE user_email = ?").get(email);
+    let prize = await dbQueryOne("SELECT * FROM prizes WHERE user_email = ?", [email]);
     if (totalCompletions >= 7 && !prize) {
       const amount = getRandomPrize();
       const code = generateClaimCode();
-      db.prepare("INSERT INTO prizes (user_email, amount, claim_code) VALUES (?, ?, ?)").run(email, amount, code);
-      prize = db.prepare("SELECT * FROM prizes WHERE user_email = ?").get(email);
+      await dbRun("INSERT INTO prizes (user_email, amount, claim_code) VALUES (?, ?, ?)", [email, amount, code]);
+      prize = await dbQueryOne("SELECT * FROM prizes WHERE user_email = ?", [email]);
     }
 
-    const completionsRows = db.prepare("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?").all(email);
+    const completionsRows = await dbQueryAll("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?", [email]);
     const completedTaskIds = completionsRows.map(c => c.challenge_id);
     const completionsMap = {};
     completionsRows.forEach(c => {
       completionsMap[c.challenge_id] = parseSqliteDate(c.completed_at);
     });
 
-    const uploads = db.prepare("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC").all(email);
+    const uploads = await dbQueryAll("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC", [email]);
 
     return res.json({
       success: true,
@@ -304,7 +390,7 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
     });
   } catch (err) {
     console.error("Complete task error:", err);
-    if (err.message && err.message.includes("UNIQUE constraint failed")) {
+    if (err.message && (err.message.includes("UNIQUE constraint failed") || err.message.includes("duplicate key"))) {
       return res.status(400).json({
         error: "Task already completed! Each email ID can only complete each task once."
       });
@@ -314,7 +400,7 @@ app.post("/api/challenges/:id/complete", upload.single("proof"), (req, res) => {
 });
 
 // 4. Leaderboard API
-app.get("/api/leaderboard", (req, res) => {
+app.get("/api/leaderboard", async (req, res) => {
   try {
     const requesterEmail = (req.headers["x-user-email"] || req.query.email || "").toString().trim().toLowerCase();
     const requesterIsAdmin = isAdminEmail(requesterEmail);
@@ -323,18 +409,18 @@ app.get("/api/leaderboard", (req, res) => {
       SELECT u.name as player_name, u.email as player_email, COUNT(c.challenge_id) * 10 as player_points
       FROM users u
       LEFT JOIN completions c ON u.email = c.user_email
-      GROUP BY u.email
+      GROUP BY u.email, u.name, u.created_at
       ORDER BY player_points DESC, u.created_at ASC
       LIMIT 50
     `;
-    const data = db.prepare(query).all();
+    const data = await dbQueryAll(query);
 
     const sanitized = data.map(r => {
       const isMe = requesterEmail && requesterEmail === r.player_email.toLowerCase();
       return {
         player_name: r.player_name,
         player_email: (requesterIsAdmin || isMe) ? r.player_email : "",
-        player_points: r.player_points
+        player_points: parseInt(r.player_points || 0, 10)
       };
     });
 
@@ -345,12 +431,12 @@ app.get("/api/leaderboard", (req, res) => {
   }
 });
 
-// 5. Admin Overview API (Strictly protected for midhu@gmail.com)
-app.get("/api/admin/overview", (req, res) => {
+// 5. Admin Overview API (Strictly for authorised admin emails)
+app.get("/api/admin/overview", async (req, res) => {
   try {
     const email = (req.headers["x-user-email"] || req.query.email || "").toString().trim().toLowerCase();
     if (!isAdminEmail(email)) {
-      return res.status(403).json({ error: "Access denied. Only admin (midhu@gmail.com) can view organiser details." });
+      return res.status(403).json({ error: "Access denied. Only authorized admins (hr@oppam.me, mubashira@oppam.me) can view organiser details." });
     }
 
     const query = `
@@ -360,13 +446,14 @@ app.get("/api/admin/overview", (req, res) => {
       FROM users u
       LEFT JOIN completions c ON u.email = c.user_email
       LEFT JOIN prizes p ON u.email = p.user_email
-      GROUP BY u.email
+      GROUP BY u.id, u.name, u.email, p.id, p.amount, p.claim_code, p.paid, p.claimed_at
       ORDER BY total_points DESC, u.name ASC
     `;
-    const users = db.prepare(query).all();
-    users.forEach(u => {
-      u.uploads = db.prepare("SELECT * FROM uploads WHERE user_email = ? ORDER BY challenge_id ASC").all(u.participant_email);
-    });
+    const users = await dbQueryAll(query);
+    for (let u of users) {
+      u.total_points = parseInt(u.total_points || 0, 10);
+      u.uploads = await dbQueryAll("SELECT * FROM uploads WHERE user_email = ? ORDER BY challenge_id ASC", [u.participant_email]);
+    }
     return res.json({ success: true, data: users });
   } catch (err) {
     console.error("Admin overview error:", err);

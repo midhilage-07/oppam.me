@@ -118,7 +118,7 @@
     if (!prevMs) {
       return { locked: false };
     }
-    const unlockTime = prevMs + (24 * 60 * 60 * 1000); // 24 hours lock
+    const unlockTime = prevMs + (1 * 60 * 60 * 1000); // 1 hour lock
     const now = getServerNow();
     if (now >= unlockTime) {
       return { locked: false };
@@ -493,9 +493,9 @@
     $("#successMessage").textContent = `Your Day 0${n} task is successfully completed.`;
     
     if (n < 7) {
-      const unlockDate = new Date(getServerNow() + 24 * 60 * 60 * 1000);
+      const unlockDate = new Date(getServerNow() + 1 * 60 * 60 * 1000);
       const timeStr = unlockDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      $("#successUnlockNotice").textContent = `Day 0${n + 1} task will be available in 24 hours (around ${timeStr}).`;
+      $("#successUnlockNotice").textContent = `Day 0${n + 1} task will be available in 1 hour (around ${timeStr}).`;
     } else {
       $("#successUnlockNotice").textContent = "🎉 Congratulations! You have completed all 7 tasks and earned 70 points! Your scratch card is unlocked below!";
     }
@@ -594,26 +594,33 @@
     const fileInput = el("input", {
       type: "file",
       id: "upInput",
-      accept: "image/*,application/pdf"
+      accept: "image/*,video/*,application/pdf"
     });
 
     fileInput.addEventListener("change", () => {
       if (fileInput.files.length) {
-        handleTaskSubmission(n, fileInput.files[0]);
+        const file = fileInput.files[0];
+        if (file.size > 2 * 1024 * 1024) {
+          state.upErr = "File size exceeds 2 MB limit. Please upload a photo or video under 2 MB.";
+          renderDialogActions();
+          fileInput.value = "";
+          return;
+        }
+        handleTaskSubmission(n, file);
         fileInput.value = "";
       }
     });
 
     const upBox = el("div", {class: "up-box"},
       fileInput,
-      el("p", {style: "font-weight:650", text: "Upload a photo, screenshot or PDF proof to complete this task"}),
-      el("p", {class: "fine", style: "margin:4px 0 12px", text: "Accepts JPG, PNG, WebP or PDF (Up to 15 MB)"}),
+      el("p", {style: "font-weight:650", text: "Upload a photo, video or proof file to complete this task"}),
+      el("p", {class: "fine", style: "margin:4px 0 12px", text: "Accepts JPG, PNG, MP4, WebP or PDF (Max 2 MB)"}),
       el("div", {style: "display:flex;gap:10px;justify-content:center;flex-wrap:wrap"},
         el("label", {
           for: "upInput",
           class: "button",
           style: state.uploading ? "opacity:.5;pointer-events:none" : "",
-          text: state.uploading ? "Uploading…" : "Choose proof file & complete"
+          text: state.uploading ? "Uploading…" : "Choose proof photo/video & complete"
         }),
         el("button", {
           class: "button outline",
@@ -912,13 +919,8 @@
   }
 
   // Export PDF with full data & proof attachments
+  // Export Full Campaign Data Report File
   function exportFullPDFReport(rows) {
-    const printWin = window.open("", "_blank");
-    if (!printWin) {
-      alert("Please allow popups to download the PDF report.");
-      return;
-    }
-
     const dateStr = new Date().toLocaleDateString("en-IN", {
       year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
     });
@@ -927,7 +929,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Oppam Games - Full Campaign Report</title>
+<title>Oppam Games - Full Campaign Data & Proofs Report</title>
 <style>
   body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #1A1810; background: #fff; line-height: 1.5; }
   h1 { margin: 0 0 4px; font-size: 22px; color: #1A1810; }
@@ -940,7 +942,7 @@
   .prize-box { background: #FFF5DB; border: 1px solid #F0DFB0; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-top: 6px; }
   .proof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
   .proof-item { border: 1px solid #EBE5D8; border-radius: 8px; padding: 8px; background: #fff; text-align: center; }
-  .proof-item img { max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 4px; margin-bottom: 6px; }
+  .proof-item img, .proof-item video { max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 4px; margin-bottom: 6px; }
   .proof-title { font-size: 12px; font-weight: 700; display: block; }
   .proof-file { font-size: 11px; color: #665F50; word-break: break-all; display: block; }
   @media print {
@@ -952,8 +954,7 @@
 </head>
 <body>
   <div class="no-print" style="margin-bottom:20px;display:flex;gap:12px">
-    <button onclick="window.print()" style="background:#FAB814;border:none;padding:10px 20px;font-weight:700;border-radius:6px;cursor:pointer;font-size:15px">🖨️ Save as PDF / Print Report</button>
-    <button onclick="window.close()" style="background:#eee;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px">Close</button>
+    <button onclick="window.print()" style="background:#FAB814;border:none;padding:10px 20px;font-weight:700;border-radius:6px;cursor:pointer;font-size:15px">🖨️ Print / Save as PDF</button>
   </div>
   <h1>Oppam.me Good-for-Me Games — Full Campaign Data & Proofs Report</h1>
   <div class="meta">Generated on ${dateStr} • Total Participants: ${rows.length}</div>
@@ -980,9 +981,10 @@
             ${uploads.map(u => {
               const fullUrl = window.location.origin + u.file_path;
               const isImg = u.mime_type && u.mime_type.startsWith("image/");
+              const isVideo = u.mime_type && u.mime_type.startsWith("video/");
               return `
                 <div class="proof-item">
-                  ${isImg ? `<img src="${fullUrl}" alt="${u.file_name}" />` : `<div style="padding:20px;background:#f0f0f0;margin-bottom:6px;border-radius:4px;font-weight:700">📄 PDF Document</div>`}
+                  ${isImg ? `<img src="${fullUrl}" alt="${u.file_name}" />` : isVideo ? `<video src="${fullUrl}" controls style="max-width:100%;max-height:160px"></video>` : `<div style="padding:20px;background:#f0f0f0;margin-bottom:6px;border-radius:4px;font-weight:700">📄 File Attachment</div>`}
                   <span class="proof-title">Day 0${u.challenge_id}</span>
                   <span class="proof-file">${u.file_name}</span>
                   <div style="margin-top:4px"><a href="${fullUrl}" target="_blank" style="font-size:11px;color:#0066cc">View Original File</a></div>
@@ -997,22 +999,28 @@
 
     html += `</body></html>`;
 
-    printWin.document.open();
-    printWin.document.write(html);
-    printWin.document.close();
+    // Direct File Download
+    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `oppam-campaign-report-${new Date().toISOString().slice(0,10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
-  // Export CSV Data
+  // Export CSV Data with proof attachment URLs
   function exportCSVReport(rows) {
-    let csv = "Name,Email,Points,Prize Amount,Claim Code,Total Uploads\n";
+    let csv = "Name,Email,Points,Prize Amount,Claim Code,Total Uploads,Proof File Links\n";
     rows.forEach(r => {
       const name = `"${(r.participant_name || "").replace(/"/g, '""')}"`;
       const email = `"${(r.participant_email || "").replace(/"/g, '""')}"`;
       const pts = r.total_points || 0;
       const prize = r.prize_amount || "";
       const code = `"${r.prize_code || ""}"`;
-      const uploads = (r.uploads || []).length;
-      csv += `${name},${email},${pts},${prize},${code},${uploads}\n`;
+      const uploads = r.uploads || [];
+      const proofLinks = `"${uploads.map(u => window.location.origin + u.file_path).join(" ; ")}"`;
+      csv += `${name},${email},${pts},${prize},${code},${uploads.length},${proofLinks}\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
