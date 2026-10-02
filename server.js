@@ -21,9 +21,10 @@ let pgPool = null;
 
 if (DATABASE_URL) {
   isPg = true;
+  const cleanUrl = DATABASE_URL.split("?")[0];
   pgPool = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: DATABASE_URL.includes("localhost") ? false : { rejectUnauthorized: false }
+    connectionString: cleanUrl,
+    ssl: { rejectUnauthorized: false }
   });
   console.log("Connected to PostgreSQL Database (Supabase / External DB)");
 } else {
