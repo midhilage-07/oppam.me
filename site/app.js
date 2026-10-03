@@ -118,7 +118,7 @@
     if (!prevMs) {
       return { locked: false };
     }
-    const unlockTime = prevMs + (1 * 60 * 60 * 1000); // 1 hour lock
+    const unlockTime = prevMs + (12 * 60 * 60 * 1000); // 12 hours lock
     const now = getServerNow();
     if (now >= unlockTime) {
       return { locked: false };
@@ -493,9 +493,9 @@
     $("#successMessage").textContent = `Your Day 0${n} task is successfully completed.`;
     
     if (n < 7) {
-      const unlockDate = new Date(getServerNow() + 1 * 60 * 60 * 1000);
+      const unlockDate = new Date(getServerNow() + 12 * 60 * 60 * 1000);
       const timeStr = unlockDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      $("#successUnlockNotice").textContent = `Day 0${n + 1} task will be available in 1 hour (around ${timeStr}).`;
+      $("#successUnlockNotice").textContent = `Day 0${n + 1} task will be available in 12 hours (around ${timeStr}).`;
     } else {
       $("#successUnlockNotice").textContent = "🎉 Congratulations! You have completed all 7 tasks and earned 70 points! Your scratch card is unlocked below!";
     }

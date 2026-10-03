@@ -332,7 +332,7 @@ app.post("/api/challenges/:id/complete", (req, res, next) => {
       }
 
       const prevMs = parseSqliteDate(prevCompletion.completed_at);
-      const unlockTime = prevMs + (1 * 60 * 60 * 1000); // 1 HOUR DELAY
+      const unlockTime = prevMs + (12 * 60 * 60 * 1000); // 12 HOURS DELAY
       const now = Date.now();
 
       if (now < unlockTime) {

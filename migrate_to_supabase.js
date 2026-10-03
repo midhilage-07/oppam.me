@@ -2,12 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
-const DATABASE_URL = process.argv[2] || process.env.DATABASE_URL;
-
-if (!DATABASE_URL) {
-  console.error("Usage: node migrate_to_supabase.js <YOUR_SUPABASE_DATABASE_URL>");
-  process.exit(1);
-}
+const DATABASE_URL = process.argv[2] || process.env.DATABASE_URL || 'postgresql://postgres.malsalrbrwbajzlpyxjc:Oppom%2Cme%40123@aws-0-ap-south-1.pooler.supabase.com:6543/postgres';
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
@@ -28,7 +23,7 @@ async function migrate() {
 
     console.log(`Found ${users.length} users in live backup.`);
 
-    // 1. Ensure Tables Exist
+    // 1. Ensure Schema Tables Exist
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -112,7 +107,14 @@ async function migrate() {
       }
     }
 
-    console.log(`✅ SUCCESS: Imported ${importedUsers} users and ${importedUploads} uploads directly into Supabase Postgres!`);
+    const finalUsersCount = await pool.query(`SELECT COUNT(*) FROM users`);
+    const finalCompletionsCount = await pool.query(`SELECT COUNT(*) FROM completions`);
+    const finalUploadsCount = await pool.query(`SELECT COUNT(*) FROM uploads`);
+
+    console.log(`✅ SUCCESS: Supabase PostgreSQL database updated!`);
+    console.log(`   - Total Users in Supabase: ${finalUsersCount.rows[0].count}`);
+    console.log(`   - Total Completions in Supabase: ${finalCompletionsCount.rows[0].count}`);
+    console.log(`   - Total Uploads in Supabase: ${finalUploadsCount.rows[0].count}`);
   } catch (err) {
     console.error("Migration error:", err);
   } finally {
