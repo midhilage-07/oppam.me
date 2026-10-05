@@ -278,7 +278,7 @@ app.get("/api/user/me", async (req, res) => {
   }
 });
 
-// 3. Complete Task / Upload Proof (1 hour unlock delay, 2MB max file size)
+// 3. Complete Task / Upload Proof (12 hours unlock delay, 2MB max file size)
 app.post("/api/challenges/:id/complete", (req, res, next) => {
   upload.single("proof")(req, res, (err) => {
     if (err) {
@@ -318,7 +318,7 @@ app.post("/api/challenges/:id/complete", (req, res, next) => {
       });
     }
 
-    // 1-hour delay between completing tasks
+    // 12-hour delay between completing tasks
     if (challengeId > 1) {
       const prevCompletion = await dbQueryOne(
         "SELECT completed_at FROM completions WHERE user_email = ? AND challenge_id = ?",
