@@ -146,8 +146,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static web app and uploaded proof files
-app.use(express.static(path.join(__dirname, "site")));
+// Serve static web app and uploaded proof files (no-cache headers to prevent stale browser caches)
+app.use(express.static(path.join(__dirname, "site"), {
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  }
+}));
 app.use("/uploads", express.static(uploadsDir));
 
 // Multer storage for uploaded proof files (Max 2 MB limit for photos & videos)
