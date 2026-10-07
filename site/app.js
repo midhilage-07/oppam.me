@@ -353,13 +353,11 @@
       const done = state.done.has(c.n);
       
       let cardClass = "mission-card";
-      let metaText = done ? "Completed · 10 pts" : "Submissions Closed";
-      let linkText = done ? "Task Completed ✓" : "🔒 Submissions Ended";
+      let metaText = done ? "Completed · 10 pts" : "10 points";
+      let linkText = done ? "Task Completed ✓" : "View challenge & submit";
 
       if (done) {
         cardClass += " done";
-      } else {
-        cardClass += " locked-time";
       }
 
       return el("button", {
@@ -519,7 +517,7 @@
     state.upErr = "";
     $("#dlgMeta").replaceChildren(
       el("span", {text: `Day 0${c.n}`}),
-      el("span", {text: state.done.has(c.n) ? "Completed ✓" : "Submissions Closed"})
+      el("span", {text: state.done.has(c.n) ? "Completed ✓" : "10 points"})
     );
     $("#dlgSymbol").textContent = c.sym;
     $("#dlgTitle").textContent = c.title;
@@ -588,9 +586,6 @@
         el("p", {style: "font-size:.95rem;color:var(--muted);line-height:1.45", text: "The time for submitting tasks has ended. Thank you so much for participating in the Good-for-Me Games 7-day playbook!"})
       )
     );
-
-    box.replaceChildren(wrap);
-  }
 
     box.replaceChildren(wrap);
   }
