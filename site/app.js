@@ -333,7 +333,7 @@
 
     let statusLine = !state.loaded ? "Loading your progress…" 
       : p >= TOTAL ? "All seven tasks done! Your scratch card is ready below." 
-      : `${(TOTAL - p) / 10} task${((TOTAL - p) / 10) === 1 ? "" : "s"} left to unlock your reward card.`;
+      : "Task submissions have ended. Thank you so much for participating in the 7-day playbook!";
 
     panel.replaceChildren(
       el("p", {class: "kicker", text: "Your week, your way"}),
@@ -351,38 +351,21 @@
   function renderCards() {
     const cards = CHALLENGES.map(c => {
       const done = state.done.has(c.n);
-      const lockStatus = state.user ? getTaskLockStatus(c.n) : { locked: false };
       
       let cardClass = "mission-card";
-      let metaText = done ? "Completed · 10 pts" : "10 points";
-      let linkText = done ? "Task Completed ✓" : "View challenge & submit";
+      let metaText = done ? "Completed · 10 pts" : "Submissions Closed";
+      let linkText = done ? "Task Completed ✓" : "🔒 Submissions Ended";
 
       if (done) {
         cardClass += " done";
-      } else if (lockStatus.locked) {
+      } else {
         cardClass += " locked-time";
-        metaText = "Locked";
-        if (lockStatus.reason === "PREV_NOT_COMPLETED") {
-          linkText = `🔒 Complete Day 0${lockStatus.prevN} first`;
-        } else if (lockStatus.reason === "TIME_LOCKED") {
-          linkText = `🔒 Available in ${formatShortTime(lockStatus.remainingMs)}`;
-        }
       }
 
       return el("button", {
         class: cardClass,
         type: "button",
-        onclick: () => {
-          if (done) {
-            openChallenge(c);
-            return;
-          }
-          if (lockStatus.locked) {
-            openLockValidationModal(c, lockStatus);
-            return;
-          }
-          openChallenge(c);
-        }
+        onclick: () => openChallenge(c)
       },
         el("div", {class: "card-meta"}, el("span", {text: `Day 0${c.n}`}), el("span", {text: metaText})),
         el("span", {class: "card-symbol", "aria-hidden": "true", text: c.sym}),
@@ -536,7 +519,7 @@
     state.upErr = "";
     $("#dlgMeta").replaceChildren(
       el("span", {text: `Day 0${c.n}`}),
-      el("span", {text: state.done.has(c.n) ? "Completed ✓" : "10 points"})
+      el("span", {text: state.done.has(c.n) ? "Completed ✓" : "Submissions Closed"})
     );
     $("#dlgSymbol").textContent = c.sym;
     $("#dlgTitle").textContent = c.title;
@@ -553,8 +536,14 @@
 
     if (!state.user) {
       box.replaceChildren(
-        el("p", {class: "fine", text: "Please log in with your Name & Email ID at the top of the page to complete tasks."}),
-        el("a", {class: "button", href: "#main", onclick: () => dlg.close(), text: "Go to Login"})
+        el("div", {
+          style: "background:var(--sun-soft);border:1.5px solid var(--sun);border-radius:var(--radius-m);padding:18px 20px;text-align:center;width:100%"
+        },
+          el("div", {style: "font-size:2rem;margin-bottom:4px", text: "⏳"}),
+          el("h4", {style: "font-size:1.15rem;font-weight:750;margin-bottom:6px;color:var(--ink)", text: "Time Ended for Submitting Tasks"}),
+          el("p", {style: "font-size:.95rem;color:var(--muted);line-height:1.4;margin-bottom:12px", text: "The time for submitting tasks has ended. Thank you so much for participating in the Good-for-Me Games 7-day playbook!"}),
+          el("a", {class: "button", href: "#main", onclick: () => dlg.close(), text: "Back to Home / Login"})
+        )
       );
       return;
     }
@@ -563,14 +552,13 @@
     const isCompleted = state.done.has(n);
     const wrap = el("div", {style: "width:100%"});
 
-    // REQUIREMENT: "one email id can do the task one time if they comeplete one task they cant do that agin"
     if (isCompleted) {
       wrap.append(
         el("div", {
           style: "background:var(--leaf-soft);border:1px solid var(--leaf);border-radius:var(--radius-m);padding:14px 18px;margin-bottom:12px"
         },
-          el("p", {style: "font-weight:700;color:var(--leaf);font-size:1.05rem", text: "✓ Task Already Completed (10 Points Earned)"}),
-          el("p", {class: "fine", style: "margin-top:4px", text: "You have completed this task! Each email ID can only complete a task once."})
+          el("p", {style: "font-weight:700;color:var(--leaf);font-size:1.05rem", text: "✓ Task Completed (10 Points Earned)"}),
+          el("p", {class: "fine", style: "margin-top:4px", text: "You have successfully completed this task!"})
         )
       );
 
@@ -590,53 +578,19 @@
       return;
     }
 
-    // IF NOT COMPLETED YET -> Allow uploading / completing
-    const fileInput = el("input", {
-      type: "file",
-      id: "upInput",
-      accept: "image/*,video/*,application/pdf"
-    });
-
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files.length) {
-        const file = fileInput.files[0];
-        if (file.size > 2 * 1024 * 1024) {
-          state.upErr = "File size exceeds 2 MB limit. Please upload a photo or video under 2 MB.";
-          renderDialogActions();
-          fileInput.value = "";
-          return;
-        }
-        handleTaskSubmission(n, file);
-        fileInput.value = "";
-      }
-    });
-
-    const upBox = el("div", {class: "up-box"},
-      fileInput,
-      el("p", {style: "font-weight:650", text: "Upload a photo, video or proof file to complete this task"}),
-      el("p", {class: "fine", style: "margin:4px 0 12px", text: "Accepts JPG, PNG, MP4, WebP or PDF (Max 2 MB)"}),
-      el("div", {style: "display:flex;gap:10px;justify-content:center;flex-wrap:wrap"},
-        el("label", {
-          for: "upInput",
-          class: "button",
-          style: state.uploading ? "opacity:.5;pointer-events:none" : "",
-          text: state.uploading ? "Uploading…" : "Choose proof photo/video & complete"
-        }),
-        el("button", {
-          class: "button outline",
-          type: "button",
-          disabled: state.uploading,
-          onclick: () => handleTaskSubmission(n, null),
-          text: "Mark complete without file"
-        })
+    // IF NOT COMPLETED -> Show Submissions Closed message
+    wrap.append(
+      el("div", {
+        style: "background:var(--sun-soft);border:2px solid var(--sun);border-radius:var(--radius-m);padding:20px 22px;text-align:center;margin-top:4px;width:100%"
+      },
+        el("div", {style: "font-size:2.4rem;margin-bottom:6px", text: "⏳"}),
+        el("h4", {style: "font-size:1.15rem;font-weight:750;margin-bottom:6px;color:var(--ink)", text: "Time Ended for Submitting Tasks"}),
+        el("p", {style: "font-size:.95rem;color:var(--muted);line-height:1.45", text: "The time for submitting tasks has ended. Thank you so much for participating in the Good-for-Me Games 7-day playbook!"})
       )
     );
 
-    wrap.append(upBox);
-
-    if (state.upErr) {
-      wrap.append(el("p", {class: "up-err", text: state.upErr}));
-    }
+    box.replaceChildren(wrap);
+  }
 
     box.replaceChildren(wrap);
   }

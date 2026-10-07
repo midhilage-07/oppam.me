@@ -278,127 +278,14 @@ app.get("/api/user/me", async (req, res) => {
   }
 });
 
-// 3. Complete Task / Upload Proof (12 hours unlock delay, 2MB max file size)
-app.post("/api/challenges/:id/complete", (req, res, next) => {
-  upload.single("proof")(req, res, (err) => {
-    if (err) {
-      if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json({ error: "File size exceeds 2 MB limit. Please upload a photo or video under 2 MB." });
-      }
-      return res.status(400).json({ error: err.message || "File upload error." });
-    }
-    next();
+// 3. Complete Task / Upload Proof (SUBMISSIONS CLOSED)
+app.post("/api/challenges/:id/complete", (req, res) => {
+  return res.status(400).json({
+    error: "The time for submitting tasks has ended. Thank you so much for participating in the Good-for-Me Games 7-day playbook!"
   });
-}, async (req, res) => {
-  try {
-    const challengeId = parseInt(req.params.id, 10);
-    const email = ((req.body && req.body.email) || req.headers["x-user-email"] || "").toString().trim().toLowerCase();
-
-    if (!email) {
-      return res.status(401).json({ error: "Please log in first to complete a task." });
-    }
-
-    if (isNaN(challengeId) || challengeId < 1 || challengeId > 7) {
-      return res.status(400).json({ error: "Invalid challenge ID." });
-    }
-
-    const user = await dbQueryOne("SELECT * FROM users WHERE email = ?", [email]);
-    if (!user) {
-      return res.status(404).json({ error: "User not found. Please log in again." });
-    }
-
-    const existingCompletion = await dbQueryOne(
-      "SELECT * FROM completions WHERE user_email = ? AND challenge_id = ?",
-      [email, challengeId]
-    );
-
-    if (existingCompletion) {
-      return res.status(400).json({
-        error: "Task already completed! Each email ID can only complete each task once."
-      });
-    }
-
-    // 12-hour delay between completing tasks
-    if (challengeId > 1) {
-      const prevCompletion = await dbQueryOne(
-        "SELECT completed_at FROM completions WHERE user_email = ? AND challenge_id = ?",
-        [email, challengeId - 1]
-      );
-
-      if (!prevCompletion) {
-        return res.status(400).json({
-          error: `Please complete Day ${challengeId - 1} task first before accessing Day ${challengeId}.`
-        });
-      }
-
-      const prevMs = parseSqliteDate(prevCompletion.completed_at);
-      const unlockTime = prevMs + (12 * 60 * 60 * 1000); // 12 HOURS DELAY
-      const now = Date.now();
-
-      if (now < unlockTime) {
-        const diffMs = unlockTime - now;
-        const hrs = Math.floor(diffMs / 3600000);
-        const mins = Math.floor((diffMs % 3600000) / 60000);
-        const secs = Math.floor((diffMs % 60000) / 1000);
-        const timeRemainingStr = hrs > 0 ? `${hrs}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
-        return res.status(400).json({
-          error: `Day ${challengeId - 1} task completed successfully. Day ${challengeId} task will be available in ${timeRemainingStr}.`
-        });
-      }
-    }
-
-    await dbRun("INSERT INTO completions (user_email, challenge_id) VALUES (?, ?)", [email, challengeId]);
-
-    if (req.file) {
-      const filePath = "/uploads/" + req.file.filename;
-      await dbRun(`
-        INSERT INTO uploads (user_email, challenge_id, file_name, file_path, mime_type, size_bytes)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `, [email, challengeId, req.file.originalname, filePath, req.file.mimetype, req.file.size]);
-    }
-
-    const totalCompletionsRow = await dbQueryOne(
-      "SELECT COUNT(*) as count FROM completions WHERE user_email = ?",
-      [email]
-    );
-    const totalCompletions = parseInt((totalCompletionsRow && totalCompletionsRow.count) || 0, 10);
-
-    let prize = await dbQueryOne("SELECT * FROM prizes WHERE user_email = ?", [email]);
-    if (totalCompletions >= 7 && !prize) {
-      const amount = getRandomPrize();
-      const code = generateClaimCode();
-      await dbRun("INSERT INTO prizes (user_email, amount, claim_code) VALUES (?, ?, ?)", [email, amount, code]);
-      prize = await dbQueryOne("SELECT * FROM prizes WHERE user_email = ?", [email]);
-    }
-
-    const completionsRows = await dbQueryAll("SELECT challenge_id, completed_at FROM completions WHERE user_email = ?", [email]);
-    const completedTaskIds = completionsRows.map(c => c.challenge_id);
-    const completionsMap = {};
-    completionsRows.forEach(c => {
-      completionsMap[c.challenge_id] = parseSqliteDate(c.completed_at);
-    });
-
-    const uploads = await dbQueryAll("SELECT * FROM uploads WHERE user_email = ? ORDER BY created_at ASC", [email]);
-
-    return res.json({
-      success: true,
-      message: "Task completed successfully!",
-      completions: completedTaskIds,
-      completionsMap,
-      serverTime: Date.now(),
-      uploads,
-      prize: prize || null
-    });
-  } catch (err) {
-    console.error("Complete task error:", err);
-    if (err.message && (err.message.includes("UNIQUE constraint failed") || err.message.includes("duplicate key"))) {
-      return res.status(400).json({
-        error: "Task already completed! Each email ID can only complete each task once."
-      });
-    }
-    return res.status(500).json({ error: "Server error while saving task completion." });
-  }
 });
+
+
 
 // 4. Leaderboard API
 app.get("/api/leaderboard", async (req, res) => {
